@@ -1,0 +1,41 @@
+# Env
+.env
+.env.local
+.env*.local
+
+# Dependencies
+node_modules/
+.dart_tool/
+.packages
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build output
+dist/
+.next/
+out/
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+.firebase/
+*-firebase-adminsdk-*.json
+
+# Supabase
+.supabase/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
