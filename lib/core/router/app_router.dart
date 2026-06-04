@@ -7,6 +7,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
+import '../../features/profile/data/address.dart';
+import '../../features/profile/presentation/address_form_screen.dart';
+import '../../features/profile/presentation/addresses_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/seller/presentation/seller_onboarding_screen.dart';
+import '../../shared/widgets/main_scaffold.dart';
 import '../supabase/supabase_providers.dart';
 
 part 'app_router.g.dart';
@@ -29,7 +36,36 @@ GoRouter goRouter(Ref ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
-      GoRoute(path: '/feed', builder: (_, _) => const FeedScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => MainScaffold(navigationShell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/feed', builder: (_, _) => const FeedScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (_, _) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/addresses',
+        builder: (_, _) => const AddressesScreen(),
+      ),
+      GoRoute(
+        path: '/profile/addresses/form',
+        builder: (_, state) =>
+            AddressFormScreen(existing: state.extra as Address?),
+      ),
+      GoRoute(
+        path: '/profile/become-seller',
+        builder: (_, _) => const SellerOnboardingScreen(),
+      ),
     ],
   );
 }
