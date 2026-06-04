@@ -11,6 +11,9 @@ import '../../features/profile/data/address.dart';
 import '../../features/profile/presentation/address_form_screen.dart';
 import '../../features/profile/presentation/addresses_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/product/data/product.dart';
+import '../../features/product/presentation/product_form_screen.dart';
+import '../../features/product/presentation/product_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/seller/presentation/seller_onboarding_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
@@ -65,6 +68,15 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/profile/become-seller',
         builder: (_, _) => const SellerOnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/seller/products',
+        builder: (_, _) => const ProductListScreen(),
+      ),
+      GoRoute(
+        path: '/seller/products/form',
+        builder: (_, state) =>
+            ProductFormScreen(existing: state.extra as Product?),
       ),
     ],
   );

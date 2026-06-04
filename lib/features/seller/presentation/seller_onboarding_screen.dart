@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../application/store_controller.dart';
 import '../data/store.dart';
@@ -46,11 +47,10 @@ class _StoreInfo extends StatelessWidget {
             child: Text(store.description!),
           ),
         const Divider(),
-        const ListTile(
-          leading: Icon(Icons.inventory_2),
-          title: Text('Kelola produk'),
-          subtitle: Text('Segera hadir'),
-          enabled: false,
+        ListTile(
+          leading: const Icon(Icons.inventory_2),
+          title: const Text('Kelola produk'),
+          onTap: () => context.push('/seller/products'),
         ),
       ],
     );
