@@ -1,0 +1,97 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/feed/presentation/feed_screen.dart';
+import '../../features/profile/data/address.dart';
+import '../../features/profile/presentation/address_form_screen.dart';
+import '../../features/profile/presentation/addresses_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/product/data/product.dart';
+import '../../features/product/presentation/product_form_screen.dart';
+import '../../features/product/presentation/product_list_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/seller/presentation/seller_onboarding_screen.dart';
+import '../../shared/widgets/main_scaffold.dart';
+import '../supabase/supabase_providers.dart';
+
+part 'app_router.g.dart';
+
+@riverpod
+GoRouter goRouter(Ref ref) {
+  final auth = ref.watch(supabaseClientProvider).auth;
+  final refresh = _AuthRefreshStream(auth.onAuthStateChange);
+  ref.onDispose(refresh.dispose);
+
+  return GoRouter(
+    initialLocation: '/feed',
+    refreshListenable: refresh,
+    redirect: (context, state) {
+      final loggedIn = auth.currentSession != null;
+      final atLogin = state.matchedLocation == '/login';
+      if (!loggedIn) return atLogin ? null : '/login';
+      if (atLogin) return '/feed';
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => MainScaffold(navigationShell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/feed', builder: (_, _) => const FeedScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (_, _) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/addresses',
+        builder: (_, _) => const AddressesScreen(),
+      ),
+      GoRoute(
+        path: '/profile/addresses/form',
+        builder: (_, state) =>
+            AddressFormScreen(existing: state.extra as Address?),
+      ),
+      GoRoute(
+        path: '/profile/become-seller',
+        builder: (_, _) => const SellerOnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/seller/products',
+        builder: (_, _) => const ProductListScreen(),
+      ),
+      GoRoute(
+        path: '/seller/products/form',
+        builder: (_, state) =>
+            ProductFormScreen(existing: state.extra as Product?),
+      ),
+    ],
+  );
+}
+
+class _AuthRefreshStream extends ChangeNotifier {
+  _AuthRefreshStream(Stream<AuthState> stream) {
+    _sub = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<AuthState> _sub;
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
