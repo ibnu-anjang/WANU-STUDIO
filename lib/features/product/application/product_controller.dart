@@ -7,6 +7,14 @@ import '../data/product_repository.dart';
 part 'product_controller.g.dart';
 
 @riverpod
+Future<List<Product>> catalogProducts(Ref ref) =>
+    ref.watch(productRepositoryProvider).fetchCatalog();
+
+@riverpod
+Future<Product> productDetail(Ref ref, String id) =>
+    ref.watch(productRepositoryProvider).fetchDetail(id);
+
+@riverpod
 class MyProducts extends _$MyProducts {
   @override
   Future<List<Product>> build() async {

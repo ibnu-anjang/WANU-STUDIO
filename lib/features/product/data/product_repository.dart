@@ -29,6 +29,15 @@ class ProductRepository {
     return rows.map(Product.fromMap).toList();
   }
 
+  Future<List<Product>> fetchCatalog() async {
+    final rows = await _client
+        .from('products')
+        .select(_selectWithRelations)
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+    return rows.map(Product.fromMap).toList();
+  }
+
   Future<Product> fetchDetail(String id) async {
     final data = await _client
         .from('products')

@@ -18,6 +18,7 @@ class MainScaffold extends StatelessWidget {
         ),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.play_circle), label: 'Feed'),
+          NavigationDestination(icon: Icon(Icons.grid_view), label: 'Jelajah'),
           NavigationDestination(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),

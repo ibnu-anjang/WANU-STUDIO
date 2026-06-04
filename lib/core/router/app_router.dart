@@ -6,12 +6,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
+import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
 import '../../features/profile/data/address.dart';
 import '../../features/profile/presentation/address_form_screen.dart';
 import '../../features/profile/presentation/addresses_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/product/data/product.dart';
+import '../../features/product/presentation/catalog_screen.dart';
+import '../../features/product/presentation/product_detail_screen.dart';
 import '../../features/product/presentation/product_form_screen.dart';
 import '../../features/product/presentation/product_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
@@ -47,6 +50,11 @@ GoRouter goRouter(Ref ref) {
           ),
           StatefulShellBranch(
             routes: [
+              GoRoute(path: '/explore', builder: (_, _) => const CatalogScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
               GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
             ],
           ),
@@ -78,6 +86,12 @@ GoRouter goRouter(Ref ref) {
         builder: (_, state) =>
             ProductFormScreen(existing: state.extra as Product?),
       ),
+      GoRoute(
+        path: '/product/:id',
+        builder: (_, state) =>
+            ProductDetailScreen(productId: state.pathParameters['id']!),
+      ),
+      GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
     ],
   );
 }
