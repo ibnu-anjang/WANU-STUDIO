@@ -55,6 +55,11 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => context.push('/profile/edit'),
             ),
             ListTile(
+              leading: const Icon(Icons.receipt_long),
+              title: const Text('Pesanan saya'),
+              onTap: () => context.push('/orders'),
+            ),
+            ListTile(
               leading: const Icon(Icons.location_on),
               title: const Text('Alamat pengiriman'),
               onTap: () => context.push('/profile/addresses'),

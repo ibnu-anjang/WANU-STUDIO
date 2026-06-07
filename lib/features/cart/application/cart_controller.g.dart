@@ -90,4 +90,4 @@ final class CartCountProvider extends $FunctionalProvider<int, int, int>
   }
 }
 
-String _$cartCountHash() => r'02b3458ec476adfb5aa69482883d3f858dfcdc45';
+String _$cartCountHash() => r'eaae23e250094d406a093c543d3488335a29908e';
