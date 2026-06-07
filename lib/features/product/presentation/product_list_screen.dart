@@ -14,9 +14,9 @@ class ProductListScreen extends ConsumerWidget {
     final products = ref.watch(myProductsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Produk saya')),
+      appBar: AppBar(title: const Text('Kelola produk')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/seller/products/form'),
+        onPressed: () => context.push('/admin/products/form'),
         child: const Icon(Icons.add),
       ),
       body: products.when(
@@ -69,7 +69,7 @@ class _ProductTile extends ConsumerWidget {
         onPressed: () =>
             ref.read(myProductsProvider.notifier).delete(product.id),
       ),
-      onTap: () => context.push('/seller/products/form', extra: product),
+      onTap: () => context.push('/admin/products/form', extra: product),
     );
   }
 }

@@ -20,11 +20,11 @@ class ProductRepository {
 
   final SupabaseClient _client;
 
-  Future<List<Product>> fetchByStore(String storeId) async {
+  // Admin: semua produk (aktif & nonaktif) dari toko tunggal WANU.
+  Future<List<Product>> fetchAll() async {
     final rows = await _client
         .from('products')
         .select(_selectWithRelations)
-        .eq('store_id', storeId)
         .order('created_at', ascending: false);
     return rows.map(Product.fromMap).toList();
   }
@@ -55,8 +55,8 @@ class ProductRepository {
     return _client.storage.from(_bucket).getPublicUrl(path);
   }
 
+  // store_id pakai default kolom (toko singleton WANU).
   Future<String> create({
-    required String storeId,
     required String title,
     String? description,
     required int basePrice,
@@ -65,7 +65,6 @@ class ProductRepository {
     final data = await _client
         .from('products')
         .insert({
-          'store_id': storeId,
           'title': title,
           'description': description,
           'base_price': basePrice,

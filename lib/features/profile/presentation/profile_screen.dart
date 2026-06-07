@@ -64,11 +64,12 @@ class ProfileScreen extends ConsumerWidget {
               title: const Text('Alamat pengiriman'),
               onTap: () => context.push('/profile/addresses'),
             ),
-            ListTile(
-              leading: Icon(p.isSeller ? Icons.storefront : Icons.store),
-              title: Text(p.isSeller ? 'Toko saya' : 'Buka toko'),
-              onTap: () => context.push('/profile/become-seller'),
-            ),
+            if (p.isAdmin)
+              ListTile(
+                leading: const Icon(Icons.storefront),
+                title: const Text('Kelola produk'),
+                onTap: () => context.push('/admin/products'),
+              ),
           ],
         ),
       ),

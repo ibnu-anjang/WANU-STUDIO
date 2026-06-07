@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../seller/application/store_controller.dart';
 import '../data/product.dart';
 import '../data/product_repository.dart';
 
@@ -17,11 +16,8 @@ Future<Product> productDetail(Ref ref, String id) =>
 @riverpod
 class MyProducts extends _$MyProducts {
   @override
-  Future<List<Product>> build() async {
-    final store = await ref.watch(myStoreProvider.future);
-    if (store == null) return [];
-    return ref.watch(productRepositoryProvider).fetchByStore(store.id);
-  }
+  Future<List<Product>> build() =>
+      ref.watch(productRepositoryProvider).fetchAll();
 
   Future<void> save({
     String? id,
@@ -33,10 +29,8 @@ class MyProducts extends _$MyProducts {
     required List<String> imageUrls,
   }) async {
     final repo = ref.read(productRepositoryProvider);
-    final store = await ref.read(myStoreProvider.future);
     final productId = id ??
         await repo.create(
-          storeId: store!.id,
           title: title,
           description: description,
           basePrice: basePrice,

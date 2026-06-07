@@ -21,7 +21,6 @@ import '../../features/product/presentation/product_detail_screen.dart';
 import '../../features/product/presentation/product_form_screen.dart';
 import '../../features/product/presentation/product_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
-import '../../features/seller/presentation/seller_onboarding_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 import '../supabase/supabase_providers.dart';
 
@@ -77,15 +76,11 @@ GoRouter goRouter(Ref ref) {
             AddressFormScreen(existing: state.extra as Address?),
       ),
       GoRoute(
-        path: '/profile/become-seller',
-        builder: (_, _) => const SellerOnboardingScreen(),
-      ),
-      GoRoute(
-        path: '/seller/products',
+        path: '/admin/products',
         builder: (_, _) => const ProductListScreen(),
       ),
       GoRoute(
-        path: '/seller/products/form',
+        path: '/admin/products/form',
         builder: (_, state) =>
             ProductFormScreen(existing: state.extra as Product?),
       ),
