@@ -7,7 +7,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
+import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
+import '../../features/order/presentation/order_detail_screen.dart';
+import '../../features/order/presentation/orders_screen.dart';
 import '../../features/profile/data/address.dart';
 import '../../features/profile/presentation/address_form_screen.dart';
 import '../../features/profile/presentation/addresses_screen.dart';
@@ -18,7 +21,6 @@ import '../../features/product/presentation/product_detail_screen.dart';
 import '../../features/product/presentation/product_form_screen.dart';
 import '../../features/product/presentation/product_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
-import '../../features/seller/presentation/seller_onboarding_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 import '../supabase/supabase_providers.dart';
 
@@ -74,15 +76,11 @@ GoRouter goRouter(Ref ref) {
             AddressFormScreen(existing: state.extra as Address?),
       ),
       GoRoute(
-        path: '/profile/become-seller',
-        builder: (_, _) => const SellerOnboardingScreen(),
-      ),
-      GoRoute(
-        path: '/seller/products',
+        path: '/admin/products',
         builder: (_, _) => const ProductListScreen(),
       ),
       GoRoute(
-        path: '/seller/products/form',
+        path: '/admin/products/form',
         builder: (_, state) =>
             ProductFormScreen(existing: state.extra as Product?),
       ),
@@ -92,6 +90,13 @@ GoRouter goRouter(Ref ref) {
             ProductDetailScreen(productId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+      GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
+      GoRoute(path: '/orders', builder: (_, _) => const OrdersScreen()),
+      GoRoute(
+        path: '/orders/:id',
+        builder: (_, state) =>
+            OrderDetailScreen(orderId: state.pathParameters['id']!),
+      ),
     ],
   );
 }

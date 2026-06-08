@@ -15,7 +15,7 @@ class Profile {
   final String? avatarUrl;
   final String? bio;
 
-  bool get isSeller => role == 'seller' || role == 'admin';
+  bool get isAdmin => role == 'admin';
 
   factory Profile.fromMap(Map<String, dynamic> map) => Profile(
     id: map['id'] as String,

@@ -1,14 +1,25 @@
 # ERD — WANU (Video Commerce App)
 
 > **Entity Relationship Diagram + Schema**
-> Versi: 0.1 (MVP) · Tanggal: 2026-06-04 · DB: Supabase Postgres
+> Versi: 0.2 (MVP) · Tanggal: 2026-06-08 · DB: Supabase Postgres
 > Lihat juga: [PRD.md](./PRD.md), [TRD.md](./TRD.md)
+
+> **⚠️ Perubahan arah (2026-06-08): SINGLE-STORE + role admin.**
+> Schema dasar tetap, tapi semantiknya berubah:
+> - `stores` jadi **singleton** (1 baris WANU Studio, di-seed; `owner_id`
+>   nullable karena tak terikat 1 user). `products.store_id` default ke store itu.
+> - Pengelolaan katalog/video diatur role **`admin`** (`profiles.role`) lewat
+>   fungsi `is_admin()` — bukan kepemilikan toko. Tabel `stores`, `follows`,
+>   `videos.store_id` masih ada tapi efektif menunjuk ke satu toko.
+> - Checkout single-store → **1 order per checkout** (tetap di-group per store
+>   untuk forward-compat). `payments.provider` = `'mock'` di fase awal.
+> - Detail RPC checkout/bayar fase mock: lihat TRD §4.2.
 
 ## 1. Diagram (Mermaid)
 
 ```mermaid
 erDiagram
-    profiles ||--o| stores : "owns (if seller)"
+    profiles ||--o| stores : "owns (admin, optional)"
     profiles ||--o{ addresses : has
     profiles ||--o{ videos : creates
     profiles ||--o{ orders : "places (buyer)"
@@ -19,7 +30,7 @@ erDiagram
     profiles ||--o{ cart_items : "has cart"
 
     stores ||--o{ products : sells
-    stores ||--o{ orders : "fulfills (seller)"
+    stores ||--o{ orders : "fulfills"
     stores ||--o{ follows : "followed"
 
     categories ||--o{ products : groups
@@ -53,14 +64,14 @@ erDiagram
 | display_name | text | |
 | avatar_url | text | Supabase Storage |
 | bio | text | |
-| role | enum(`buyer`,`seller`,`admin`) | default buyer |
+| role | enum(`buyer`,`seller`,`admin`) | default buyer; **`admin`** = pengelola WANU (`seller` legacy/tak dipakai) |
 | created_at | timestamptz | |
 
-### 2.2 `stores` (data toko seller)
+### 2.2 `stores` (singleton — toko brand WANU)
 | Kolom | Tipe | Catatan |
 |---|---|---|
-| id | uuid PK | |
-| owner_id | uuid FK → profiles | unique (1 user = 1 toko MVP) |
+| id | uuid PK | singleton `1111...1111`, di-seed |
+| owner_id | uuid FK → profiles | **nullable** (toko tak terikat 1 user) |
 | name | text | |
 | slug | text unique | |
 | logo_url | text | |
@@ -93,7 +104,7 @@ erDiagram
 | Kolom | Tipe | Catatan |
 |---|---|---|
 | id | uuid PK | |
-| store_id | uuid FK → stores | |
+| store_id | uuid FK → stores | default = store singleton WANU |
 | category_id | uuid FK → categories | |
 | title | text | |
 | description | text | |
@@ -183,7 +194,7 @@ erDiagram
 |---|---|---|
 | id | uuid PK | |
 | buyer_id | uuid FK → profiles | |
-| store_id | uuid FK → stores | order di-split per seller |
+| store_id | uuid FK → stores | selalu store WANU (single-store → 1 order/checkout) |
 | address_id | uuid FK → addresses | snapshot alamat juga disimpan |
 | status | enum | lihat di bawah |
 | subtotal | int | |
@@ -211,7 +222,7 @@ erDiagram
 |---|---|---|
 | id | uuid PK | |
 | order_id | uuid FK → orders | unique |
-| provider | text | "midtrans" |
+| provider | text | `'mock'` (fase awal) → `'midtrans'` |
 | snap_token | text | |
 | transaction_id | text | dari Midtrans |
 | payment_type | text | va/gopay/card |
@@ -234,7 +245,7 @@ erDiagram
 ## 3. Catatan Desain Penting
 
 1. **Stok ada di `product_variants`, bukan `products`** — produk simpel tetap punya 1 variant default.
-2. **Multi-seller cart → split order:** 1 checkout bisa menghasilkan beberapa `orders` (1 per `store`), tapi 1 pembayaran Midtrans (gross = total semua). Untuk MVP boleh disederhanakan: 1 order per checkout per seller, dibungkus 1 `midtrans_order_id` grup. *(Keputusan implementasi ada di TRD §4.2.)*
+2. **Single-store → 1 order per checkout:** karena hanya ada 1 toko (WANU), checkout menghasilkan 1 `orders`. Logic checkout tetap meng-group cart per `store` (`create_orders_from_cart`) untuk forward-compat, tapi praktiknya selalu 1 grup. *(Implementasi di TRD §4.2.)*
 3. **Snapshot di `order_items`** (title, variant, harga) supaya order historis tidak berubah saat produk diedit/dihapus.
 4. **Counter denormalized** (`like_count`, `comment_count`) di `videos` di-update via trigger/Edge Function biar feed cepat.
 5. **Decrement stok** hanya saat `payments.status = settlement/capture` (di webhook), lihat TRD §4.2.

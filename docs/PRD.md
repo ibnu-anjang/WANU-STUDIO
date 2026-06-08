@@ -1,11 +1,21 @@
 # PRD — WANU (Video Commerce App)
 
 > **Product Requirements Document**
-> Versi: 0.1 (MVP) · Tanggal: 2026-06-04 · Status: Draft
+> Versi: 0.2 (MVP) · Tanggal: 2026-06-08 · Status: Draft
+
+> **⚠️ Perubahan arah (2026-06-08) — SINGLE-STORE, bukan marketplace.**
+> WANU **bukan** marketplace multi-penjual. WANU adalah **satu toko brand**
+> (WANU Studio) yang menjual banyak produk, dengan konten video/foto.
+> - Tidak ada onboarding "buka toko" untuk user. Toko = singleton yang di-seed.
+> - Pengelolaan katalog & video dibatasi ke **role `admin`** (`profiles.role`),
+>   bisa ditambah staff. User biasa murni **pembeli**.
+> - Karena 1 toko → checkout = 1 order (tanpa split multi-seller).
+> - **Pembayaran fase awal = MOCK** (simulasi, tanpa gateway) sampai akun
+>   Midtrans aktif. Arsitektur webhook tetap dipakai (lihat TRD §4.2).
 
 ## 1. Ringkasan Produk
 
-WANU adalah aplikasi mobile yang menggabungkan **feed video short-form (ala TikTok/Reels)** dengan **marketplace lengkap**. User bisa scroll video vertikal tanpa henti, setiap video bisa di-tag produk, dan user bisa langsung beli dari video tersebut (keranjang → checkout → bayar). Mirip konsep **TikTok Shop / Shopee Video**.
+WANU adalah aplikasi mobile yang menggabungkan **feed video short-form (ala TikTok/Reels)** dengan **toko online satu brand (WANU Studio)**. User scroll video vertikal, setiap video bisa di-tag produk, dan langsung beli dari video tersebut (keranjang → checkout → bayar). Pengalaman ala **TikTok Shop**, tapi etalasenya satu toko (bukan banyak penjual).
 
 **One-liner:** *Nonton, ngiler, checkout — tanpa pindah aplikasi.*
 
@@ -20,8 +30,9 @@ WANU adalah aplikasi mobile yang menggabungkan **feed video short-form (ala TikT
 | Persona | Kebutuhan |
 |---|---|
 | **Buyer (Penonton)** | Hiburan + nemu produk menarik + checkout cepat & aman |
-| **Seller (Kreator/Toko)** | Upload video produk, kelola katalog, terima order & pembayaran |
-| **Admin** | Moderasi konten, verifikasi seller, monitoring transaksi |
+| **Admin / Staff WANU** | Upload video produk, kelola katalog (produk/varian/stok/harga), proses order & pembayaran |
+
+> Hanya ada satu toko (WANU Studio). "Penjual" = tim admin WANU, bukan user umum.
 
 ## 4. Scope MVP (v0.1)
 
@@ -30,28 +41,27 @@ Berdasarkan keputusan: **Short-form video feed + Marketplace full dengan payment
 ### 4.1 Fitur In-Scope (MVP)
 
 **Auth & Profil**
-- Sign up / login (email + OTP, atau Google/Apple)
-- Profil user (buyer) & onboarding jadi seller
-- Alamat pengiriman (multiple address)
+- Sign up / login (email + password; OTP/Google menyusul)
+- Profil user (buyer) + alamat pengiriman (multiple address)
+- Akses admin (kelola katalog/video) lewat role `admin` di DB
 
 **Video Feed (For You)**
 - Feed vertikal infinite scroll, autoplay
-- Like, comment, share, follow seller
+- Like, comment, share
 - Tag produk di video (1 video bisa banyak produk)
 - Tombol "Lihat Produk" / keranjang langsung dari video
 
-**Seller / Toko**
-- Onboarding seller (verifikasi data toko)
+**Admin / Studio (kelola toko WANU)**
 - Upload video (rekam/galeri) + attach produk
 - CRUD produk + varian (warna/ukuran) + stok + harga
 - Dashboard order masuk + ubah status (proses → kirim)
 
-**Marketplace & Transaksi**
+**Toko & Transaksi**
 - Halaman detail produk (galeri + video terkait)
 - Search & kategori
-- Keranjang (multi-seller → split order)
+- Keranjang → checkout (1 toko = 1 order)
 - Checkout: pilih alamat, ongkir (flat MVP), metode bayar
-- **Pembayaran via Midtrans** (VA, e-wallet, kartu) + webhook update status
+- **Pembayaran:** fase awal **MOCK/simulasi**; target **Midtrans** (VA, e-wallet, kartu) + webhook update status
 - Status order (pending → paid → shipped → completed)
 - Review & rating produk setelah order selesai
 
@@ -73,10 +83,10 @@ Berdasarkan keputusan: **Short-form video feed + Marketplace full dengan payment
 ```
 A. Discovery → Beli
    Buka app → Feed video → Tap produk di video → Detail produk
-   → Add to cart → Checkout → Bayar (Midtrans) → Order dibuat → Notif
+   → Add to cart → Checkout → Bayar (mock → Midtrans) → Order dibuat → Notif
 
-B. Seller jualan
-   Daftar seller → Verifikasi → Tambah produk → Upload video + tag produk
+B. Admin kelola toko
+   Login admin → Tambah produk → Upload video + tag produk
    → Video tayang di feed → Terima order → Proses → Kirim → Selesai
 
 C. Pasca-order
@@ -87,13 +97,13 @@ C. Pasca-order
 
 | ID | Requirement | Prioritas |
 |---|---|---|
-| FR-01 | User bisa register/login dengan OTP & social login | P0 |
+| FR-01 | User bisa register/login (email+password; OTP/social menyusul) | P0 |
 | FR-02 | User bisa scroll feed video & autoplay | P0 |
-| FR-03 | Seller bisa upload video & tag ≥1 produk | P0 |
-| FR-04 | Buyer bisa add to cart lintas seller | P0 |
-| FR-05 | Checkout menghasilkan order + transaksi Midtrans | P0 |
-| FR-06 | Webhook Midtrans meng-update status pembayaran | P0 |
-| FR-07 | Seller bisa update status pengiriman | P0 |
+| FR-03 | Admin bisa upload video & tag ≥1 produk | P0 |
+| FR-04 | Buyer bisa add to cart (1 toko WANU) | P0 |
+| FR-05 | Checkout menghasilkan order + pembayaran (mock → Midtrans) | P0 |
+| FR-06 | Status `paid` hanya dari server (mock RPC → webhook Midtrans) | P0 |
+| FR-07 | Admin bisa update status pengiriman | P0 |
 | FR-08 | Buyer bisa review produk setelah order selesai | P1 |
 | FR-09 | Like, comment, follow di video | P1 |
 | FR-10 | Push notif untuk order & interaksi sosial | P1 |

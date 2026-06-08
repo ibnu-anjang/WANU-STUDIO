@@ -1,15 +1,25 @@
 # TRD — WANU (Video Commerce App)
 
 > **Technical Requirements Document**
-> Versi: 0.1 (MVP) · Tanggal: 2026-06-04 · Status: Draft
+> Versi: 0.2 (MVP) · Tanggal: 2026-06-08 · Status: Draft
 > Lihat juga: [PRD.md](./PRD.md), [ERD.md](./ERD.md)
+
+> **⚠️ Perubahan arah (2026-06-08): SINGLE-STORE + role admin + mock payment.**
+> - WANU = satu toko (singleton di tabel `stores`, di-seed; `owner_id` nullable).
+>   Produk `store_id` default ke store itu — admin tak pilih toko.
+> - Otorisasi kelola katalog/video pakai fungsi **`is_admin()`** (`profiles.role
+>   = 'admin'`), bukan `is_store_owner`. Migration `..._single_store_admin.sql`.
+> - **Fase mock payment:** karena akun Midtrans belum aktif & Edge Functions
+>   belum di-deploy, checkout & "bayar" pakai **Postgres RPC `SECURITY DEFINER`**
+>   (`create_orders_from_cart`, `mark_order_paid`) — lihat §4.2. Saat Midtrans
+>   aktif, dipindah ke Edge Functions sesuai desain di bawah.
 
 ## 1. Arsitektur Tingkat Tinggi
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Flutter App (Riverpod)                 │
-│   Feed · Produk · Cart · Checkout · Seller Dashboard      │
+│   Feed · Produk · Cart · Checkout · Admin (kelola katalog)│
 └───────┬──────────────┬───────────────┬───────────────────┘
         │              │               │
         │ HLS stream   │ REST/RPC       │ Upload
@@ -53,7 +63,7 @@
 
 ## 4. Alur Teknis Kunci
 
-### 4.1 Upload Video (Seller)
+### 4.1 Upload Video (Admin)
 ```
 1. App minta one-time upload URL → Edge Function `create-video-upload`
 2. Edge Function panggil Cloudflare Stream API → balikin uploadURL + uid
@@ -63,21 +73,40 @@
 ```
 
 ### 4.2 Checkout & Pembayaran (paling kritikal)
+
+**Target (Midtrans aktif):**
 ```
 1. App POST cart → Edge Function `create-order`
 2. Function (dalam 1 transaksi DB):
    - validasi stok tiap item
    - buat `orders` (status=pending) + `order_items` (snapshot harga)
-   - split per seller jika multi-seller
+   - (single-store → 1 order per checkout)
 3. Function panggil Midtrans Snap → balikin snap_token
 4. App buka Snap (Midtrans Flutter SDK) → user bayar
 5. Midtrans → POST webhook → Edge Function `midtrans-webhook`:
    - verifikasi signature_key (sha512)
    - jika settlement/capture → order.status=paid, DECREMENT stok di sini
-   - trigger FCM ke buyer & seller
+   - trigger FCM ke buyer & admin
 6. Client TIDAK PERNAH menentukan status paid — hanya webhook.
 ```
-> **Aturan stok:** stok dikurangi saat status `paid` (di webhook), bukan saat add-to-cart maupun create-order. Validasi ulang stok di webhook; jika habis → refund flow (out-of-scope MVP, log untuk admin).
+
+**Fase MOCK sekarang (tanpa gateway, tanpa deploy Edge Function):**
+```
+1. App panggil RPC `create_orders_from_cart(p_address_id)` (SECURITY DEFINER):
+   - group cart per store (saat ini selalu 1 store WANU) → buat orders +
+     order_items snapshot + payments(provider='mock', status=pending)
+   - kosongkan cart; TIDAK menyentuh stok
+2. App tampilkan order pending → tombol "Bayar (Simulasi)"
+3. App panggil RPC `mark_order_paid(p_order_id)` (stand-in webhook):
+   - idempotent pending→paid, DECREMENT stok, payment→settlement
+   - guard: hanya buyer pemilik order (mock); cek oversell via check stock>=0
+```
+> **Swap ke Midtrans:** `create_orders_from_cart` dipakai ulang oleh Edge
+> Function `create-order` (yang juga manggil Snap). `mark_order_paid` di-REVOKE
+> dari `authenticated` dan dipanggil **hanya** dari `midtrans-webhook`
+> (service_role) setelah verifikasi signature. `payments.provider` → 'midtrans'.
+
+> **Aturan stok:** stok dikurangi saat status `paid` (mock RPC sekarang / webhook nanti), bukan saat add-to-cart maupun create-order. Jika habis → refund flow (out-of-scope MVP, log untuk admin).
 
 ### 4.3 Feed Video (For You)
 ```
@@ -99,8 +128,8 @@ lib/
 │   ├── cart/
 │   ├── checkout/
 │   ├── order/
-│   ├── seller/     # dashboard, upload, manage product
-│   └── profile/
+│   └── profile/    # profil, alamat; menu "Kelola produk" utk admin
+│       # (admin kelola katalog via fitur product, gated is_admin)
 ├── shared/         # widgets, models, utils
 └── main.dart
 ```
@@ -108,20 +137,26 @@ Tiap feature: `data/` (repository + dto) · `application/` (riverpod providers/n
 
 ## 6. Edge Functions (Deno/TS)
 
-| Function | Tugas |
-|---|---|
-| `create-video-upload` | Generate Cloudflare Stream upload URL |
-| `video-ready-webhook` | Terima callback Cloudflare, simpan playback_id |
-| `create-order` | Validasi stok, buat order + items, panggil Midtrans |
-| `midtrans-webhook` | Verifikasi signature, update status, decrement stok, push notif |
-| `send-notification` | Wrapper FCM |
+| Function | Tugas | Status |
+|---|---|---|
+| `create-video-upload` | Generate Cloudflare Stream upload URL | belum (butuh Cloudflare) |
+| `video-ready-webhook` | Terima callback Cloudflare, simpan playback_id | belum |
+| `create-order` | Buat order + items, panggil Midtrans Snap | belum (mock pakai RPC `create_orders_from_cart`) |
+| `midtrans-webhook` | Verifikasi signature, update status, decrement stok, push notif | belum (mock pakai RPC `mark_order_paid`) |
+| `send-notification` | Wrapper FCM | belum |
+
+> Fase mock: logic checkout/bayar ada di Postgres RPC `SECURITY DEFINER`
+> (lihat §4.2), bukan Edge Function — agar tak perlu deploy CLI/MCP.
 
 ## 7. Keamanan
 
-- **RLS aktif di semua tabel.** Contoh kebijakan:
-  - `products`: SELECT publik, INSERT/UPDATE hanya `seller_id = auth.uid()`
-  - `orders`: SELECT hanya buyer pemilik ATAU seller terkait
-  - `videos`: SELECT publik (status=ready), tulis hanya owner
+- **RLS aktif di semua tabel.** Contoh kebijakan (single-store + admin):
+  - `products`/`product_variants`/`product_images`/`videos`: SELECT publik,
+    tulis hanya `is_admin()`
+  - `orders`/`order_items`/`payments`: SELECT buyer pemilik ATAU `is_admin()`;
+    INSERT order & transisi `paid` hanya via RPC/Edge Function (bukan client)
+  - `cart_items`/`addresses`: privat per `auth.uid()`
+  - Storage `product-images`: read publik, tulis hanya `is_admin()`
 - Webhook Midtrans: verifikasi `signature_key = sha512(order_id + status_code + gross_amount + server_key)`.
 - Secret (Midtrans server key, Cloudflare token) hanya di Edge Function env, tidak pernah di app.
 - Upload langsung ke Cloudflare via one-time URL (app tidak pegang token).
@@ -155,10 +190,11 @@ MIDTRANS_CLIENT_KEY=
 
 ## 10. Estimasi Urutan Kerja
 
-1. Setup Supabase + schema + RLS (lihat ERD)
-2. Auth + profil + seller onboarding
-3. Produk CRUD + Storage gambar
-4. Cloudflare Stream + upload video + feed
-5. Cart + checkout + Midtrans + webhook (paling lama)
-6. Order status + review
-7. Push notif + polish
+1. ✅ Setup Supabase + schema + RLS (lihat ERD)
+2. ✅ Auth + profil + alamat (single-store, role admin)
+3. ✅ Produk CRUD + Storage gambar (gated is_admin)
+4. ✅ Cart + checkout + bayar (fase MOCK via RPC)
+5. ⏳ Cloudflare Stream + upload video + feed (butuh akun Cloudflare)
+6. ⏳ Swap mock → Midtrans Snap + webhook (butuh akun Midtrans aktif)
+7. ⏳ Order status lanjut + review
+8. ⏳ Push notif + polish
