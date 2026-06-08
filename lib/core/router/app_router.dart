@@ -9,6 +9,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
+import '../../features/feed/presentation/upload_video_screen.dart';
 import '../../features/order/presentation/order_detail_screen.dart';
 import '../../features/order/presentation/orders_screen.dart';
 import '../../features/profile/data/address.dart';
@@ -88,6 +89,10 @@ GoRouter goRouter(Ref ref) {
         path: '/product/:id',
         builder: (_, state) =>
             ProductDetailScreen(productId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/feed/upload',
+        builder: (_, _) => const UploadVideoScreen(),
       ),
       GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
       GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
