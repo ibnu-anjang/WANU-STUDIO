@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/form_fields.dart';
 import '../application/profile_controller.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -60,42 +62,44 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Edit profil')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpace.lg),
+        children: [
+          LabeledField(
+            label: 'Nama tampilan',
+            child: TextField(
               controller: _displayName,
-              decoration: const InputDecoration(labelText: 'Nama tampilan'),
+              decoration: const InputDecoration(hintText: 'Nama kamu'),
             ),
-            const SizedBox(height: 12),
-            TextField(
+          ),
+          const SizedBox(height: AppSpace.lg),
+          LabeledField(
+            label: 'Username',
+            child: TextField(
               controller: _username,
               decoration: const InputDecoration(
-                labelText: 'Username',
+                hintText: 'username',
                 prefixText: '@',
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
+          ),
+          const SizedBox(height: AppSpace.lg),
+          LabeledField(
+            label: 'Bio',
+            child: TextField(
               controller: _bio,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Bio'),
+              decoration: const InputDecoration(
+                hintText: 'Ceritakan sedikit tentang kamu',
+              ),
             ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Simpan'),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SaveBar(
+        label: 'Simpan',
+        saving: _saving,
+        onSave: _save,
       ),
     );
   }

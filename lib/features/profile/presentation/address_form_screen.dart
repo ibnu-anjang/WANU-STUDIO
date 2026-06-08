@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/form_fields.dart';
 import '../application/address_controller.dart';
 import '../data/address.dart';
 
@@ -74,65 +76,87 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.lg),
           children: [
-            TextFormField(
-              controller: _recipient,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Nama penerima'),
+            LabeledField(
+              label: 'Nama penerima',
+              child: TextFormField(
+                controller: _recipient,
+                validator: _required,
+                decoration: const InputDecoration(hintText: 'Nama lengkap'),
+              ),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _phone,
-              keyboardType: TextInputType.phone,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'No. HP'),
+            const SizedBox(height: AppSpace.lg),
+            LabeledField(
+              label: 'No. HP',
+              child: TextFormField(
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                validator: _required,
+                decoration: const InputDecoration(hintText: '08xxxxxxxxxx'),
+              ),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _line1,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Alamat lengkap'),
+            const SizedBox(height: AppSpace.lg),
+            LabeledField(
+              label: 'Alamat lengkap',
+              child: TextFormField(
+                controller: _line1,
+                validator: _required,
+                decoration: const InputDecoration(
+                  hintText: 'Jalan, nomor, RT/RW, patokan',
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _city,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Kota/Kabupaten'),
+            const SizedBox(height: AppSpace.lg),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: LabeledField(
+                    label: 'Kota/Kabupaten',
+                    child: TextFormField(
+                      controller: _city,
+                      validator: _required,
+                      decoration: const InputDecoration(hintText: 'Kota'),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpace.md),
+                Expanded(
+                  child: LabeledField(
+                    label: 'Kode pos',
+                    child: TextFormField(
+                      controller: _postal,
+                      keyboardType: TextInputType.number,
+                      validator: _required,
+                      decoration: const InputDecoration(hintText: '00000'),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _province,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Provinsi'),
+            const SizedBox(height: AppSpace.lg),
+            LabeledField(
+              label: 'Provinsi',
+              child: TextFormField(
+                controller: _province,
+                validator: _required,
+                decoration: const InputDecoration(hintText: 'Provinsi'),
+              ),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _postal,
-              keyboardType: TextInputType.number,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Kode pos'),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Jadikan alamat utama'),
+            const SizedBox(height: AppSpace.lg),
+            SwitchRow(
+              title: 'Jadikan alamat utama',
               value: _isDefault,
               onChanged: (v) => setState(() => _isDefault = v),
             ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Simpan'),
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: SaveBar(
+        label: 'Simpan alamat',
+        saving: _saving,
+        onSave: _save,
       ),
     );
   }

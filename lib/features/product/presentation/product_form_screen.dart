@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/form_fields.dart';
 import '../application/product_controller.dart';
 import '../data/product.dart';
 import '../data/product_repository.dart';
@@ -112,48 +114,59 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.lg),
           children: [
-            _ImagePicker(
-              urls: _imageUrls,
-              uploading: _uploading,
-              onAdd: _pickImage,
-              onRemove: (i) => setState(() => _imageUrls.removeAt(i)),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _title,
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
-              decoration: const InputDecoration(labelText: 'Nama produk'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _description,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Deskripsi'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _basePrice,
-              keyboardType: TextInputType.number,
-              validator: (v) {
-                final n = int.tryParse(v?.trim() ?? '');
-                if (n == null || n < 0) return 'Harga tidak valid';
-                return null;
-              },
-              decoration: const InputDecoration(
-                labelText: 'Harga dasar',
-                prefixText: 'Rp ',
+            LabeledField(
+              label: 'Foto produk',
+              child: _ImagePicker(
+                urls: _imageUrls,
+                uploading: _uploading,
+                onAdd: _pickImage,
+                onRemove: (i) => setState(() => _imageUrls.removeAt(i)),
               ),
             ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Aktif (tampil di etalase)'),
+            const SizedBox(height: AppSpace.lg),
+            LabeledField(
+              label: 'Nama produk',
+              child: TextFormField(
+                controller: _title,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                decoration: const InputDecoration(hintText: 'Nama produk'),
+              ),
+            ),
+            const SizedBox(height: AppSpace.lg),
+            LabeledField(
+              label: 'Deskripsi',
+              child: TextFormField(
+                controller: _description,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Detail, bahan, ukuran…',
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpace.lg),
+            LabeledField(
+              label: 'Harga dasar',
+              child: TextFormField(
+                controller: _basePrice,
+                keyboardType: TextInputType.number,
+                validator: (v) {
+                  final n = int.tryParse(v?.trim() ?? '');
+                  if (n == null || n < 0) return 'Harga tidak valid';
+                  return null;
+                },
+                decoration: const InputDecoration(prefixText: 'Rp '),
+              ),
+            ),
+            const SizedBox(height: AppSpace.lg),
+            SwitchRow(
+              title: 'Aktif (tampil di etalase)',
               value: _isActive,
               onChanged: (v) => setState(() => _isActive = v),
             ),
-            const Divider(height: 32),
+            const SizedBox(height: AppSpace.xl),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -161,30 +174,28 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 TextButton.icon(
                   onPressed: () =>
                       setState(() => _variants.add(VariantInput())),
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add, size: 18),
                   label: const Text('Tambah'),
                 ),
               ],
             ),
+            const SizedBox(height: AppSpace.sm),
             for (final v in _variants)
-              _VariantRow(
-                key: ObjectKey(v),
-                variant: v,
-                onRemove: () => setState(() => _variants.remove(v)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpace.md),
+                child: _VariantRow(
+                  key: ObjectKey(v),
+                  variant: v,
+                  onRemove: () => setState(() => _variants.remove(v)),
+                ),
               ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Simpan'),
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: SaveBar(
+        label: 'Simpan produk',
+        saving: _saving,
+        onSave: _save,
       ),
     );
   }
@@ -206,33 +217,33 @@ class _ImagePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 96,
+      height: 100,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
           for (var i = 0; i < urls.length; i++)
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: AppSpace.sm),
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     child: Image.network(
                       urls[i],
-                      width: 96,
-                      height: 96,
+                      width: 100,
+                      height: 100,
                       fit: BoxFit.cover,
                     ),
                   ),
                   Positioned(
-                    top: 0,
-                    right: 0,
+                    top: AppSpace.xs,
+                    right: AppSpace.xs,
                     child: GestureDetector(
                       onTap: () => onRemove(i),
                       child: const CircleAvatar(
                         radius: 12,
-                        backgroundColor: Colors.black54,
-                        child: Icon(Icons.close, size: 14),
+                        backgroundColor: Colors.black87,
+                        child: Icon(Icons.close, size: 14, color: Colors.white),
                       ),
                     ),
                   ),
@@ -242,15 +253,30 @@ class _ImagePicker extends StatelessWidget {
           GestureDetector(
             onTap: uploading ? null : onAdd,
             child: Container(
-              width: 96,
-              height: 96,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.white24),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.surface,
+                border: Border.all(color: AppColors.borderStrong),
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
               child: uploading
                   ? const Center(child: CircularProgressIndicator())
-                  : const Icon(Icons.add_a_photo),
+                  : const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_outlined,
+                            color: AppColors.textSecondary),
+                        SizedBox(height: AppSpace.xs),
+                        Text(
+                          'Tambah',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ],
@@ -271,8 +297,13 @@ class _VariantRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return Container(
+      padding: const EdgeInsets.all(AppSpace.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -289,7 +320,7 @@ class _VariantRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpace.sm),
           Expanded(
             flex: 3,
             child: TextFormField(
@@ -302,7 +333,7 @@ class _VariantRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpace.sm),
           Expanded(
             flex: 2,
             child: TextFormField(
@@ -316,7 +347,10 @@ class _VariantRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.remove_circle_outline),
+            icon: const Icon(
+              Icons.remove_circle_outline,
+              color: AppColors.danger,
+            ),
             onPressed: onRemove,
           ),
         ],
