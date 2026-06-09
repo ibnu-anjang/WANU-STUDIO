@@ -59,35 +59,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.accentGradient,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      boxShadow: AppShadow.accentGlow,
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 36,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 132,
+                      height: 132,
                     ),
                   ),
-                  const SizedBox(height: AppSpace.xl),
-                  ShaderMask(
-                    shaderCallback: (r) =>
-                        AppColors.accentGradient.createShader(r),
-                    child: Text(
-                      'WANU',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .displaySmall
-                          ?.copyWith(color: Colors.white, fontSize: 40),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpace.xs),
+                  const SizedBox(height: AppSpace.lg),
                   const Text(
                     'Belanja dari video favoritmu',
                     textAlign: TextAlign.center,
