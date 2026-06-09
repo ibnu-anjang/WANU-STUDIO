@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/glass.dart';
 import '../../cart/application/cart_controller.dart';
+import '../../profile/application/profile_controller.dart';
 import '../application/product_controller.dart';
 import '../data/product.dart';
 import '../data/product_review.dart';
@@ -22,6 +24,7 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   String? _variantId;
   var _adding = false;
+  var _buying = false;
 
   Future<void> _addToCart() async {
     setState(() => _adding = true);
@@ -42,9 +45,25 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     }
   }
 
+  Future<void> _buyNow() async {
+    setState(() => _buying = true);
+    try {
+      await ref.read(cartProvider.notifier).add(_variantId!, 1);
+      if (mounted) context.push('/checkout');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _buying = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = ref.watch(productDetailProvider(widget.productId));
+    final isAdmin = ref.watch(currentProfileProvider).value?.isAdmin ?? false;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -70,7 +89,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: product.maybeWhen(
+      bottomNavigationBar: isAdmin
+          ? null
+          : product.maybeWhen(
         data: (p) => Container(
           decoration: const BoxDecoration(
             color: AppColors.bgElevated,
@@ -79,29 +100,55 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSpace.lg),
-              child: SizedBox(
-                height: 54,
-                child: FilledButton.icon(
-                  onPressed: (_variantId == null || _adding) ? null : _addToCart,
-                  icon: _adding
-                      ? const SizedBox.shrink()
-                      : const Icon(Icons.add_shopping_cart, size: 20),
-                  label: _adding
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+              child: _variantId == null
+                  ? const SizedBox(
+                      height: 54,
+                      child: FilledButton(
+                        onPressed: null,
+                        child: Text('Pilih varian dulu'),
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 54,
+                            child: OutlinedButton.icon(
+                              onPressed: (_adding || _buying) ? null : _addToCart,
+                              icon: _adding
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.add_shopping_cart,
+                                      size: 20),
+                              label: const Text('Keranjang'),
+                            ),
                           ),
-                        )
-                      : Text(
-                          _variantId == null
-                              ? 'Pilih varian dulu'
-                              : 'Tambah ke keranjang',
                         ),
-                ),
-              ),
+                        const SizedBox(width: AppSpace.md),
+                        Expanded(
+                          child: SizedBox(
+                            height: 54,
+                            child: FilledButton(
+                              onPressed: (_adding || _buying) ? null : _buyNow,
+                              child: _buying
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('Beli Sekarang'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),

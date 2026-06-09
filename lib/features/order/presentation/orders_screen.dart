@@ -16,7 +16,14 @@ class OrdersScreen extends ConsumerWidget {
     final orders = ref.watch(ordersProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pesanan Saya')),
+      appBar: AppBar(
+        title: const Text('Pesanan Saya'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/profile'),
+        ),
+      ),
       body: orders.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Gagal memuat: $e')),

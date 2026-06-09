@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/format.dart';
 import '../../cart/application/cart_controller.dart';
+import '../../order/application/order_controller.dart';
 import '../../profile/application/address_controller.dart';
 import '../../profile/data/address.dart';
 import '../application/checkout_controller.dart';
@@ -25,6 +26,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     try {
       await ref.read(checkoutProvider.notifier).placeOrder(_addressId);
       if (!mounted) return;
+      ref.invalidate(cartProvider);
+      ref.invalidate(ordersProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pesanan dibuat — lanjut bayar')),
       );
@@ -32,10 +35,23 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _placing = false);
+      // Cart kosong server-side biasanya berarti order sudah terlanjur dibuat
+      // (double-tap / cache basi). Sinkronkan cart, arahkan ke daftar pesanan.
+      if (_isEmptyCart(e)) {
+        ref.invalidate(cartProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Keranjang kosong — cek pesanan kamu')),
+        );
+        context.go('/orders');
+        return;
+      }
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Gagal: $e')));
+          .showSnackBar(SnackBar(content: Text('Gagal membuat pesanan: $e')));
     }
   }
+
+  bool _isEmptyCart(Object e) =>
+      e.toString().toLowerCase().contains('cart is empty');
 
   @override
   Widget build(BuildContext context) {
