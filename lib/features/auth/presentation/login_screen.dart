@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/glass.dart';
 import '../application/auth_controller.dart';
+import '../application/auth_messages.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -15,12 +16,15 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _passwordFocus = FocusNode();
   bool _isSignUp = false;
+  bool _obscure = true;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -43,7 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen(authControllerProvider, (_, next) {
       if (next.hasError && !next.isLoading) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error.toString())),
+          SnackBar(content: Text(humanizeAuthError(next.error!))),
         );
       }
     });
@@ -59,15 +63,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    child: Image.asset(
-                      'assets/logo.png',
-                      width: 132,
-                      height: 132,
-                    ),
+                  Image.asset(
+                    'assets/logo-mark.png',
+                    width: 184,
+                    filterQuality: FilterQuality.high,
                   ),
-                  const SizedBox(height: AppSpace.lg),
+                  const SizedBox(height: AppSpace.md),
+                  Text(
+                    'WANU STUDIO',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 4,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
                   const Text(
                     'Belanja dari video favoritmu',
                     textAlign: TextAlign.center,
@@ -89,19 +100,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         TextField(
                           controller: _email,
                           keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          decoration: const InputDecoration(
-                            hintText: 'Email',
-                            prefixIcon: Icon(Icons.alternate_email, size: 20),
+                          autofillHints: const [AutofillHints.username],
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) => _passwordFocus.requestFocus(),
+                          decoration: InputDecoration(
+                            hintText: _isSignUp ? 'Email' : 'Email atau username',
+                            prefixIcon: const Icon(Icons.alternate_email, size: 20),
                           ),
                         ),
                         const SizedBox(height: AppSpace.md),
                         TextField(
                           controller: _password,
-                          obscureText: true,
-                          decoration: const InputDecoration(
+                          focusNode: _passwordFocus,
+                          obscureText: _obscure,
+                          autofillHints: const [AutofillHints.password],
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => loading ? null : _submit(),
+                          decoration: InputDecoration(
                             hintText: 'Password',
-                            prefixIcon: Icon(Icons.lock_outline, size: 20),
+                            prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                            suffixIcon: IconButton(
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                size: 20,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: AppSpace.xl),

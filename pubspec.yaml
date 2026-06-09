@@ -67,7 +67,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/logo.png
+    - assets/logo-mark.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -101,12 +101,12 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 flutter_launcher_icons:
-  image_path: "assets/logo.png"
+  image_path: "assets/logo-solid.png"
   android: true
   adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "assets/logo.png"
+  adaptive_icon_foreground: "assets/logo-solid.png"
   web:
     generate: true
-    image_path: "assets/logo.png"
+    image_path: "assets/logo-solid.png"
     background_color: "#000000"
     theme_color: "#7AB8D4"

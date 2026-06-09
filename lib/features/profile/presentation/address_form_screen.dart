@@ -83,6 +83,8 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
               child: TextFormField(
                 controller: _recipient,
                 validator: _required,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 decoration: const InputDecoration(hintText: 'Nama lengkap'),
               ),
             ),
@@ -93,6 +95,8 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 controller: _phone,
                 keyboardType: TextInputType.phone,
                 validator: _required,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 decoration: const InputDecoration(hintText: '08xxxxxxxxxx'),
               ),
             ),
@@ -102,6 +106,8 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
               child: TextFormField(
                 controller: _line1,
                 validator: _required,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 decoration: const InputDecoration(
                   hintText: 'Jalan, nomor, RT/RW, patokan',
                 ),
@@ -117,6 +123,9 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                     child: TextFormField(
                       controller: _city,
                       validator: _required,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       decoration: const InputDecoration(hintText: 'Kota'),
                     ),
                   ),
@@ -129,6 +138,9 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                       controller: _postal,
                       keyboardType: TextInputType.number,
                       validator: _required,
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) =>
+                          FocusScope.of(context).nextFocus(),
                       decoration: const InputDecoration(hintText: '00000'),
                     ),
                   ),
@@ -141,6 +153,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
               child: TextFormField(
                 controller: _province,
                 validator: _required,
+                textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(hintText: 'Provinsi'),
               ),
             ),

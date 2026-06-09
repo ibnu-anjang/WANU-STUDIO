@@ -5,6 +5,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/format.dart';
+import '../../profile/application/profile_controller.dart';
 import '../application/feed_controller.dart';
 import '../data/feed_video.dart';
 
@@ -21,6 +22,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(feedVideosProvider);
+    final isAdmin =
+        ref.watch(currentProfileProvider).value?.isAdmin ?? false;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -56,19 +59,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg),
               child: Row(
                 children: [
+                  Image.asset(
+                    'assets/logo-mark.png',
+                    height: 40,
+                    filterQuality: FilterQuality.high,
+                  ),
+                  const SizedBox(width: AppSpace.sm),
                   Text(
                     'WANU',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w900),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    onPressed: () => context.push('/feed/upload'),
-                    icon: const Icon(Icons.add_box_outlined,
-                        color: Colors.white, size: 28),
-                  ),
+                  if (isAdmin)
+                    IconButton(
+                      onPressed: () => context.push('/feed/upload'),
+                      icon: const Icon(Icons.add_box_outlined,
+                          color: Colors.white, size: 28),
+                    ),
                 ],
               ),
             ),
@@ -161,7 +172,8 @@ class _VideoPageState extends ConsumerState<_VideoPage> {
   void _togglePlay() {
     final c = _controller;
     if (c == null || !_ready) return;
-    setState(() => c.value.isPlaying ? c.pause() : c.play());
+    c.value.isPlaying ? c.pause() : c.play();
+    setState(() {});
   }
 
   @override

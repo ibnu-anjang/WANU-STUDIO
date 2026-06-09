@@ -9,14 +9,19 @@ class AuthController extends _$AuthController {
   @override
   FutureOr<void> build() {}
 
-  Future<void> signIn(String email, String password) async {
+  Future<void> signIn(String identifier, String password) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => ref
-          .read(supabaseClientProvider)
-          .auth
-          .signInWithPassword(email: email, password: password),
-    );
+    state = await AsyncValue.guard(() async {
+      final client = ref.read(supabaseClientProvider);
+      var email = identifier;
+      if (!identifier.contains('@')) {
+        final resolved =
+            await client.rpc('email_for_username', params: {'p_username': identifier});
+        if (resolved == null) throw Exception('Akun tidak ditemukan');
+        email = resolved as String;
+      }
+      await client.auth.signInWithPassword(email: email, password: password);
+    });
   }
 
   Future<void> signUp(String email, String password) async {

@@ -40,8 +40,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().contains('profiles_username_lower_key') ||
+                e.toString().contains('23505')
+            ? 'Username sudah dipakai, pilih yang lain.'
+            : 'Gagal menyimpan. Coba lagi sebentar.';
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+            .showSnackBar(SnackBar(content: Text(msg)));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -69,6 +73,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             label: 'Nama tampilan',
             child: TextField(
               controller: _displayName,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) => FocusScope.of(context).nextFocus(),
               decoration: const InputDecoration(hintText: 'Nama kamu'),
             ),
           ),
@@ -77,6 +83,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             label: 'Username',
             child: TextField(
               controller: _username,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) => FocusScope.of(context).nextFocus(),
               decoration: const InputDecoration(
                 hintText: 'username',
                 prefixText: '@',

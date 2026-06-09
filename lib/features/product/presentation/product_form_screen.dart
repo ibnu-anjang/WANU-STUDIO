@@ -132,6 +132,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 controller: _title,
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 decoration: const InputDecoration(hintText: 'Nama produk'),
               ),
             ),
@@ -157,6 +159,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   if (n == null || n < 0) return 'Harga tidak valid';
                   return null;
                 },
+                textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(prefixText: 'Rp '),
               ),
             ),
@@ -314,6 +317,8 @@ class _VariantRow extends StatelessWidget {
               onChanged: (v) => variant.name = v,
               validator: (v) =>
                   (v == null || v.trim().isEmpty) ? 'Nama?' : null,
+              textInputAction: TextInputAction.next,
+              onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
               decoration: const InputDecoration(
                 labelText: 'Varian',
                 isDense: true,
@@ -327,6 +332,8 @@ class _VariantRow extends StatelessWidget {
               initialValue: variant.price == 0 ? '' : variant.price.toString(),
               keyboardType: TextInputType.number,
               onChanged: (v) => variant.price = int.tryParse(v) ?? 0,
+              textInputAction: TextInputAction.next,
+              onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
               decoration: const InputDecoration(
                 labelText: 'Harga',
                 isDense: true,
@@ -340,6 +347,8 @@ class _VariantRow extends StatelessWidget {
               initialValue: variant.stock == 0 ? '' : variant.stock.toString(),
               keyboardType: TextInputType.number,
               onChanged: (v) => variant.stock = int.tryParse(v) ?? 0,
+              textInputAction: TextInputAction.next,
+              onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
               decoration: const InputDecoration(
                 labelText: 'Stok',
                 isDense: true,
