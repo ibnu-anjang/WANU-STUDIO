@@ -42,3 +42,7 @@ Thumbs.db
 
 # Local dev shortcuts (personal)
 Makefile
+
+# Source logo mentah (processed versions ada di assets/)
+/logo.png
+/logo-transparan.png
