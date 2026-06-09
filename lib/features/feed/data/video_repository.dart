@@ -9,7 +9,7 @@ import 'feed_video.dart';
 part 'video_repository.g.dart';
 
 const _select = 'id, caption, video_url, cf_thumbnail_url, created_at, '
-    'profiles(username, display_name, avatar_url), '
+    'profiles!videos_creator_id_fkey(username, display_name, avatar_url), '
     'video_product_tags(products(id, title, base_price, '
     'product_images(url, sort_order)))';
 
