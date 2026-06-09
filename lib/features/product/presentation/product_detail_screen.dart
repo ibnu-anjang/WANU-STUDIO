@@ -7,6 +7,7 @@ import '../../../shared/widgets/glass.dart';
 import '../../cart/application/cart_controller.dart';
 import '../application/product_controller.dart';
 import '../data/product.dart';
+import '../data/product_review.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.productId});
@@ -229,10 +230,142 @@ class _DetailState extends State<_Detail> {
                     ),
                 ],
               ),
+              const SizedBox(height: AppSpace.xl),
+              _ReviewsSection(productId: product.id),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ReviewsSection extends ConsumerWidget {
+  const _ReviewsSection({required this.productId});
+
+  final String productId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reviews = ref.watch(productReviewsProvider(productId));
+
+    return reviews.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (list) {
+        final avg = list.isEmpty
+            ? 0.0
+            : list.map((r) => r.rating).reduce((a, b) => a + b) / list.length;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Ulasan',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(width: AppSpace.sm),
+                if (list.isNotEmpty) ...[
+                  const Icon(Icons.star_rounded,
+                      size: 18, color: Color(0xFFFBBF24)),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${avg.toStringAsFixed(1)} · ${list.length} ulasan',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSpace.md),
+            if (list.isEmpty)
+              const Text(
+                'Belum ada ulasan.',
+                style: TextStyle(color: AppColors.textMuted),
+              )
+            else
+              for (final r in list) ...[
+                _ReviewTile(review: r),
+                const SizedBox(height: AppSpace.md),
+              ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ReviewTile extends StatelessWidget {
+  const _ReviewTile({required this.review});
+
+  final ProductReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpace.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 12,
+                backgroundColor: AppColors.bgElevated,
+                backgroundImage: review.authorAvatarUrl != null
+                    ? NetworkImage(review.authorAvatarUrl!)
+                    : null,
+                child: review.authorAvatarUrl == null
+                    ? const Icon(Icons.person, size: 14)
+                    : null,
+              ),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Text(
+                  review.authorName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 1; i <= 5; i++)
+                    Icon(
+                      i <= review.rating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      size: 14,
+                      color: const Color(0xFFFBBF24),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          if (review.comment?.isNotEmpty ?? false) ...[
+            const SizedBox(height: AppSpace.sm),
+            Text(
+              review.comment!,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_providers.dart';
 import 'product.dart';
+import 'product_review.dart';
 
 part 'product_repository.g.dart';
 
@@ -27,6 +28,16 @@ class ProductRepository {
         .select(_selectWithRelations)
         .order('created_at', ascending: false);
     return rows.map(Product.fromMap).toList();
+  }
+
+  Future<List<ProductReview>> fetchReviews(String productId) async {
+    final rows = await _client
+        .from('reviews')
+        .select('rating, comment, created_at, '
+            'profiles(username, display_name, avatar_url)')
+        .eq('product_id', productId)
+        .order('created_at', ascending: false);
+    return rows.map(ProductReview.fromMap).toList();
   }
 
   Future<List<Product>> fetchCatalog() async {

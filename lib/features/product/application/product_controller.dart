@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../data/product.dart';
 import '../data/product_repository.dart';
+import '../data/product_review.dart';
 
 part 'product_controller.g.dart';
 
@@ -12,6 +13,10 @@ Future<List<Product>> catalogProducts(Ref ref) =>
 @riverpod
 Future<Product> productDetail(Ref ref, String id) =>
     ref.watch(productRepositoryProvider).fetchDetail(id);
+
+@riverpod
+Future<List<ProductReview>> productReviews(Ref ref, String id) =>
+    ref.watch(productRepositoryProvider).fetchReviews(id);
 
 @riverpod
 class MyProducts extends _$MyProducts {

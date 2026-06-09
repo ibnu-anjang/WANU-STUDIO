@@ -33,7 +33,7 @@ final class FeedVideosProvider
   FeedVideos create() => FeedVideos();
 }
 
-String _$feedVideosHash() => r'6d732b233c2065a7789dae76ae10d2ca5ac6d645';
+String _$feedVideosHash() => r'466d5b42663e48ddd1a357ca4163d68dfb9efae8';
 
 abstract class _$FeedVideos extends $AsyncNotifier<List<FeedVideo>> {
   FutureOr<List<FeedVideo>> build();

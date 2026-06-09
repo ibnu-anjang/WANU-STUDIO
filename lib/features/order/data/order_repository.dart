@@ -9,7 +9,8 @@ part 'order_repository.g.dart';
 const _select =
     'id, status, subtotal, shipping_fee, total, created_at, '
     'stores(name), '
-    'order_items(product_title, variant_name, unit_price, quantity), '
+    'order_items(id, product_title, variant_name, unit_price, quantity, '
+    'product_variants(product_id), reviews(rating, comment)), '
     'payments(status)';
 
 @riverpod
@@ -40,4 +41,17 @@ class OrderRepository {
   // MOCK: simulasi webhook Midtrans. Saat gateway aktif, dipindah ke server.
   Future<void> markPaid(String orderId) =>
       _client.rpc('mark_order_paid', params: {'p_order_id': orderId});
+
+  // Transisi status dijaga server-side (set_order_status). Lihat migration 0010.
+  Future<void> setStatus(String orderId, String to) => _client.rpc(
+        'set_order_status',
+        params: {'p_order_id': orderId, 'p_to': to},
+      );
+
+  Future<void> submitReview(String orderItemId, int rating, String? comment) =>
+      _client.rpc('submit_review', params: {
+        'p_order_item_id': orderItemId,
+        'p_rating': rating,
+        'p_comment': comment,
+      });
 }

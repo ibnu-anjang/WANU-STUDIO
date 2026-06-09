@@ -16,6 +16,22 @@ class Orders extends _$Orders {
     ref.invalidateSelf();
     await future;
   }
+
+  Future<void> setStatus(String orderId, String to) async {
+    await ref.read(orderRepositoryProvider).setStatus(orderId, to);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  Future<void> submitReview(
+    String orderItemId,
+    int rating,
+    String? comment,
+  ) async {
+    await ref.read(orderRepositoryProvider).submitReview(orderItemId, rating, comment);
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 @riverpod
