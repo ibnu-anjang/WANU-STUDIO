@@ -42,4 +42,17 @@ class ProfileRepository {
         .rpc('promote_to_admin', params: {'p_identifier': identifier});
     return name as String;
   }
+
+  // Hard delete akun sendiri via Edge Function (service role hapus auth user
+  // → cascade ke profil & data). Caller wajib signOut setelah ini.
+  Future<void> deleteAccount() async {
+    final res = await _client.functions.invoke('delete-account');
+    if (res.status != 200) {
+      final data = res.data;
+      final msg = data is Map && data['error'] != null
+          ? data['error'].toString()
+          : 'Gagal menghapus akun (${res.status})';
+      throw Exception(msg);
+    }
+  }
 }

@@ -7,6 +7,42 @@ import '../../../shared/widgets/glass.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/profile_controller.dart';
 import '../data/profile.dart';
+import '../data/profile_repository.dart';
+
+Future<void> _confirmDeleteAccount(BuildContext context, WidgetRef ref) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Hapus akun?'),
+      content: const Text(
+        'Akun dan semua datamu (pesanan, alamat, konten) akan dihapus '
+        'permanen. Tindakan ini tidak bisa dibatalkan.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Hapus permanen'),
+        ),
+      ],
+    ),
+  );
+  if (ok != true || !context.mounted) return;
+
+  final messenger = ScaffoldMessenger.of(context);
+  try {
+    await ref.read(profileRepositoryProvider).deleteAccount();
+    await ref.read(authControllerProvider.notifier).signOut();
+  } catch (e) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('Gagal menghapus akun: $e')),
+    );
+  }
+}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -91,6 +127,13 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () => context.push('/admin/promote'),
                   ),
                 ],
+                const SizedBox(height: AppSpace.lg),
+                _MenuTile(
+                  icon: Icons.delete_forever_outlined,
+                  title: 'Hapus akun',
+                  danger: true,
+                  onTap: () => _confirmDeleteAccount(context, ref),
+                ),
               ],
             ),
           ),
@@ -173,12 +216,14 @@ class _MenuTile extends StatelessWidget {
     required this.title,
     required this.onTap,
     this.accent = false,
+    this.danger = false,
   });
 
   final IconData icon;
   final String title;
   final VoidCallback onTap;
   final bool accent;
+  final bool danger;
 
   @override
   Widget build(BuildContext context) {
@@ -203,24 +248,31 @@ class _MenuTile extends StatelessWidget {
                   height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: accent
-                        ? AppColors.accent.withValues(alpha: 0.15)
-                        : AppColors.glassFill,
+                    color: danger
+                        ? AppColors.danger.withValues(alpha: 0.15)
+                        : accent
+                            ? AppColors.accent.withValues(alpha: 0.15)
+                            : AppColors.glassFill,
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(
                     icon,
                     size: 20,
-                    color: accent ? AppColors.accent : AppColors.textPrimary,
+                    color: danger
+                        ? AppColors.danger
+                        : accent
+                            ? AppColors.accent
+                            : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(width: AppSpace.lg),
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
+                      color: danger ? AppColors.danger : null,
                     ),
                   ),
                 ),
