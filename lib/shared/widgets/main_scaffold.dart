@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../features/profile/application/profile_controller.dart';
 import 'glass.dart';
 
-class MainScaffold extends StatelessWidget {
+class MainScaffold extends ConsumerWidget {
   const MainScaffold({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
-
-  static const _items = [
-    (icon: Icons.play_circle_outline, active: Icons.play_circle, label: 'Feed'),
-    (icon: Icons.explore_outlined, active: Icons.explore, label: 'Jelajah'),
-    (icon: Icons.person_outline, active: Icons.person, label: 'Profil'),
-  ];
 
   void _go(int i) => navigationShell.goBranch(
         i,
@@ -21,7 +17,27 @@ class MainScaffold extends StatelessWidget {
       );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdmin = ref.watch(currentProfileProvider).value?.isAdmin ?? false;
+    final items = [
+      (
+        icon: Icons.play_circle_outline,
+        active: Icons.play_circle,
+        label: 'Feed',
+      ),
+      isAdmin
+          ? (
+              icon: Icons.receipt_long_outlined,
+              active: Icons.receipt_long,
+              label: 'Pesanan',
+            )
+          : (
+              icon: Icons.explore_outlined,
+              active: Icons.explore,
+              label: 'Jelajah',
+            ),
+      (icon: Icons.person_outline, active: Icons.person, label: 'Profil'),
+    ];
     return Scaffold(
       extendBody: true,
       body: navigationShell,
@@ -43,9 +59,9 @@ class MainScaffold extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              for (var i = 0; i < _items.length; i++)
+              for (var i = 0; i < items.length; i++)
                 _NavItem(
-                  item: _items[i],
+                  item: items[i],
                   selected: navigationShell.currentIndex == i,
                   onTap: () => _go(i),
                 ),

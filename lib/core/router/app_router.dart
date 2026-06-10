@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,8 +11,10 @@ import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
 import '../../features/feed/presentation/upload_video_screen.dart';
+import '../../features/order/presentation/admin_orders_screen.dart';
 import '../../features/order/presentation/order_detail_screen.dart';
 import '../../features/order/presentation/orders_screen.dart';
+import '../../features/profile/application/profile_controller.dart';
 import '../../features/profile/data/address.dart';
 import '../../features/profile/presentation/address_form_screen.dart';
 import '../../features/profile/presentation/addresses_screen.dart';
@@ -53,7 +56,7 @@ GoRouter goRouter(Ref ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/explore', builder: (_, _) => const CatalogScreen()),
+              GoRoute(path: '/explore', builder: (_, _) => const _ExploreBranch()),
             ],
           ),
           StatefulShellBranch(
@@ -104,6 +107,17 @@ GoRouter goRouter(Ref ref) {
       ),
     ],
   );
+}
+
+// Tab kedua: buyer lihat katalog, admin lihat kontrol pesanan masuk.
+class _ExploreBranch extends ConsumerWidget {
+  const _ExploreBranch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isAdmin = ref.watch(currentProfileProvider).value?.isAdmin ?? false;
+    return isAdmin ? const AdminOrdersScreen() : const CatalogScreen();
+  }
 }
 
 class _AuthRefreshStream extends ChangeNotifier {
