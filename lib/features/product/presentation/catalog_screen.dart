@@ -9,11 +9,36 @@ import '../../cart/application/cart_controller.dart';
 import '../application/product_controller.dart';
 import '../data/product.dart';
 
-class CatalogScreen extends ConsumerWidget {
+class CatalogScreen extends ConsumerStatefulWidget {
   const CatalogScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CatalogScreen> createState() => _CatalogScreenState();
+}
+
+class _CatalogScreenState extends ConsumerState<CatalogScreen> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<Product> _filter(List<Product> products) {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return products;
+    return products.where((p) => p.title.toLowerCase().contains(q)).toList();
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(catalogProductsProvider);
+    await ref.read(catalogProductsProvider.future);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final catalog = ref.watch(catalogProductsProvider);
     final cartCount = ref.watch(cartCountProvider);
 
@@ -21,51 +46,68 @@ class CatalogScreen extends ConsumerWidget {
       body: AppBackground(
         child: SafeArea(
           bottom: false,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: _Header(cartCount: cartCount),
-              ),
-              catalog.when(
-                loading: () => const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
+          child: RefreshIndicator(
+            onRefresh: _refresh,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _Header(
+                    cartCount: cartCount,
+                    controller: _search,
+                    onChanged: (v) => setState(() => _query = v),
+                  ),
                 ),
-                error: (e, _) => SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: Text('Gagal memuat: $e')),
-                ),
-                data: (products) {
-                  if (products.isEmpty) {
-                    return const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: Text('Belum ada produk')),
+                catalog.when(
+                  loading: () => const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (e, _) => SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text('Gagal memuat: $e')),
+                  ),
+                  data: (products) {
+                    final list = _filter(products);
+                    if (list.isEmpty) {
+                      return SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(
+                          child: Text(
+                            _query.isEmpty
+                                ? 'Belum ada produk'
+                                : 'Tidak ada hasil untuk "$_query"',
+                            style: const TextStyle(
+                                color: AppColors.textSecondary),
+                          ),
+                        ),
+                      );
+                    }
+                    return SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.lg,
+                        AppSpace.sm,
+                        AppSpace.lg,
+                        120,
+                      ),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.72,
+                          crossAxisSpacing: AppSpace.md,
+                          mainAxisSpacing: AppSpace.md,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (_, i) => _ProductCard(product: list[i]),
+                          childCount: list.length,
+                        ),
+                      ),
                     );
-                  }
-                  return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpace.lg,
-                      AppSpace.sm,
-                      AppSpace.lg,
-                      120,
-                    ),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.62,
-                        crossAxisSpacing: AppSpace.md,
-                        mainAxisSpacing: AppSpace.md,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (_, i) => _ProductCard(product: products[i]),
-                        childCount: products.length,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -74,9 +116,15 @@ class CatalogScreen extends ConsumerWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.cartCount});
+  const _Header({
+    required this.cartCount,
+    required this.controller,
+    required this.onChanged,
+  });
 
   final int cartCount;
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -117,18 +165,38 @@ class _Header extends StatelessWidget {
           const SizedBox(height: AppSpace.lg),
           GlassContainer(
             radius: AppRadius.md,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpace.lg,
-              vertical: 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg),
             child: Row(
-              children: const [
-                Icon(Icons.search, size: 20, color: AppColors.textMuted),
-                SizedBox(width: AppSpace.md),
-                Text(
-                  'Cari produk, brand, kategori…',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+              children: [
+                const Icon(Icons.search, size: 20, color: AppColors.textMuted),
+                const SizedBox(width: AppSpace.md),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    onChanged: onChanged,
+                    textInputAction: TextInputAction.search,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: const InputDecoration(
+                      isCollapsed: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
+                      border: InputBorder.none,
+                      hintText: 'Cari produk…',
+                      hintStyle: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
                 ),
+                if (controller.text.isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                    child: const Icon(Icons.close,
+                        size: 18, color: AppColors.textMuted),
+                  ),
               ],
             ),
           ),
@@ -158,7 +226,8 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            AspectRatio(
+              aspectRatio: 1,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -199,16 +268,18 @@ class _ProductCard extends StatelessWidget {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpace.md),
-              child: Text(
-                product.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(height: 1.3),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.md),
+                child: Text(
+                  product.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(height: 1.3),
+                ),
               ),
             ),
           ],

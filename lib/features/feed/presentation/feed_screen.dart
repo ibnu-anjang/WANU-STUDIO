@@ -66,7 +66,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   ),
                   const SizedBox(width: AppSpace.sm),
                   Text(
-                    'WANU',
+                    'WANU STUDIO',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
@@ -74,6 +74,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         ),
                   ),
                   const Spacer(),
+                  IconButton(
+                    onPressed: () => ref.invalidate(feedVideosProvider),
+                    icon: const Icon(Icons.refresh,
+                        color: Colors.white, size: 26),
+                  ),
                   if (isAdmin)
                     IconButton(
                       onPressed: () => context.push('/feed/upload'),
@@ -226,6 +231,28 @@ class _VideoPageState extends ConsumerState<_VideoPage> {
               ),
             ),
           ),
+          if (_ready && c != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                child: VideoProgressIndicator(
+                  c,
+                  allowScrubbing: true,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.lg,
+                    vertical: AppSpace.sm,
+                  ),
+                  colors: const VideoProgressColors(
+                    playedColor: AppColors.accent,
+                    bufferedColor: Colors.white24,
+                    backgroundColor: Colors.white12,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
