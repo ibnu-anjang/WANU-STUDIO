@@ -39,8 +39,17 @@ Kalau sesi baru: bilang aja **"lanjutin sesuai docs/PLANNING-BATCH.md, mulai Bat
 - **Tombol back di `/orders`**: `context.canPop() ? pop : go('/profile')` —
   fix nyangkut setelah checkout (route top-level di luar shell).
 
-> ⚠️ Masih perlu **commit** semua perubahan di atas (belum di-commit saat catatan ditulis).
-> Branch `feat/order-status-review` juga belum di-push / belum ada PR.
+> ✅ Sudah di-commit (`dc8a307`). Verifikasi ulang 2026-06-11: checkout_controller +
+> checkout_screen + order_repository semua bersih (tak ada `ref` setelah await).
+> Screenshot disposed-ref yang sempat ada itu bukti lama (pre-fix), bukan bug aktif.
+> Branch `feat/order-status-review` belum di-push / belum ada PR.
+
+- **Batch A — SELESAI** (commit batch A, 2026-06-11):
+  - #4 refresh: catalog pull-to-refresh + tombol refresh di feed.
+  - #5 search Jelajah: filter client-side live + tombol clear.
+  - #6 drag mouse/trackpad di Web: `scrollBehavior` global di `main.dart`.
+  - #8 konsistensi media: gambar produk grid + detail jadi `AspectRatio(1)` BoxFit.cover.
+  - #10 (sebagian): wordmark "WANU STUDIO", overlay feed bottom-aligned, scrubber video.
 
 ---
 
@@ -63,7 +72,21 @@ Mulai dari sini. Aman, cepat, tidak ada migration.
     (rapikan alignment bawah).
   - **Scrubber detik** untuk video feed (slider posisi via `VideoPlayerController`).
 
-## Batch B — Restrukturisasi role admin (UI, sedikit/tanpa skema)
+## Batch B — Restrukturisasi role admin — ✅ SELESAI (2026-06-11)
+
+- #1 Tab admin = `AdminOrdersScreen` (list semua order + advance status inline),
+  nav label jadi "Pesanan". Switch via `_ExploreBranch` di router. Buyer tetap katalog.
+- #2 Profil admin: entry buyer (Pesanan saya, Alamat) disembunyikan; tambah
+  "Kelola feed" + "Jadikan user admin". RPC `promote_to_admin(text)` (migration
+  `20260611000001`, match username/email, admin-gated). Cart entry-point admin
+  sudah hilang (katalog disembunyikan + buy-bar di-gate sebelumnya).
+- #11 `ManageFeedScreen` (route `/admin/feed`): list konten feed, hapus + konfirmasi,
+  shortcut upload. `videoRepository.deleteVideo` (cascade ke tags).
+
+> Catatan: edit caption/tag dari kelola-feed BELUM diimplement (cuma list+hapus+upload).
+> Tambahkan kalau memang dibutuhkan.
+
+### (referensi lama) Batch B — rencana awal
 
 - **#1 Tab "Jelajah" admin → "Pesanan/Kontrol"**. Admin lihat semua pesanan masuk
   + bisa ubah status (paid→processing→shipped) lewat `set_order_status` yang sudah ada.
