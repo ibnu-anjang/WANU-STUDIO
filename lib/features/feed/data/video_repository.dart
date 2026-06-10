@@ -69,6 +69,10 @@ class VideoRepository {
     }
   }
 
+  // Tag ikut terhapus via ON DELETE CASCADE. RLS membatasi ke admin.
+  Future<void> deleteVideo(String id) =>
+      _client.from('videos').delete().eq('id', id);
+
   String _mimeFor(String ext) => switch (ext.toLowerCase()) {
         'mov' => 'video/quicktime',
         'webm' => 'video/webm',

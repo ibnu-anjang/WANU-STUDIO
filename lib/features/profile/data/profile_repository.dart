@@ -34,4 +34,12 @@ class ProfileRepository {
       'bio': bio,
     }).eq('id', uid);
   }
+
+  // Promote user existing jadi admin via username/email. Mengembalikan nama
+  // yang dipromosikan. Otorisasi & validasi dijaga RPC server-side.
+  Future<String> promoteToAdmin(String identifier) async {
+    final name = await _client
+        .rpc('promote_to_admin', params: {'p_identifier': identifier});
+    return name as String;
+  }
 }

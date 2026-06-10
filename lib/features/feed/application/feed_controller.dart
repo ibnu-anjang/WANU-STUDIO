@@ -29,4 +29,10 @@ class FeedVideos extends _$FeedVideos {
     ref.invalidateSelf();
     await future;
   }
+
+  Future<void> delete(String id) async {
+    await ref.read(videoRepositoryProvider).deleteVideo(id);
+    ref.invalidateSelf();
+    await future;
+  }
 }

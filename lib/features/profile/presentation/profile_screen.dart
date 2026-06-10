@@ -59,23 +59,38 @@ class ProfileScreen extends ConsumerWidget {
                   title: 'Edit profil',
                   onTap: () => context.push('/profile/edit'),
                 ),
-                _MenuTile(
-                  icon: Icons.receipt_long_outlined,
-                  title: 'Pesanan saya',
-                  onTap: () => context.push('/orders'),
-                ),
-                _MenuTile(
-                  icon: Icons.location_on_outlined,
-                  title: 'Alamat pengiriman',
-                  onTap: () => context.push('/profile/addresses'),
-                ),
-                if (p.isAdmin)
+                if (!p.isAdmin) ...[
+                  _MenuTile(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Pesanan saya',
+                    onTap: () => context.push('/orders'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.location_on_outlined,
+                    title: 'Alamat pengiriman',
+                    onTap: () => context.push('/profile/addresses'),
+                  ),
+                ],
+                if (p.isAdmin) ...[
                   _MenuTile(
                     icon: Icons.storefront_outlined,
                     title: 'Kelola produk',
                     accent: true,
                     onTap: () => context.push('/admin/products'),
                   ),
+                  _MenuTile(
+                    icon: Icons.video_settings_outlined,
+                    title: 'Kelola feed',
+                    accent: true,
+                    onTap: () => context.push('/admin/feed'),
+                  ),
+                  _MenuTile(
+                    icon: Icons.admin_panel_settings_outlined,
+                    title: 'Jadikan user admin',
+                    accent: true,
+                    onTap: () => context.push('/admin/promote'),
+                  ),
+                ],
               ],
             ),
           ),

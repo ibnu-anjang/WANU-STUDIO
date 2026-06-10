@@ -10,6 +10,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
+import '../../features/feed/presentation/manage_feed_screen.dart';
 import '../../features/feed/presentation/upload_video_screen.dart';
 import '../../features/order/presentation/admin_orders_screen.dart';
 import '../../features/order/presentation/order_detail_screen.dart';
@@ -19,6 +20,7 @@ import '../../features/profile/data/address.dart';
 import '../../features/profile/presentation/address_form_screen.dart';
 import '../../features/profile/presentation/addresses_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/promote_admin_screen.dart';
 import '../../features/product/data/product.dart';
 import '../../features/product/presentation/catalog_screen.dart';
 import '../../features/product/presentation/product_detail_screen.dart';
@@ -87,6 +89,14 @@ GoRouter goRouter(Ref ref) {
         path: '/admin/products/form',
         builder: (_, state) =>
             ProductFormScreen(existing: state.extra as Product?),
+      ),
+      GoRoute(
+        path: '/admin/feed',
+        builder: (_, _) => const ManageFeedScreen(),
+      ),
+      GoRoute(
+        path: '/admin/promote',
+        builder: (_, _) => const PromoteAdminScreen(),
       ),
       GoRoute(
         path: '/product/:id',
