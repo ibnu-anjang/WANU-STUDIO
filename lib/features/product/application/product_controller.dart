@@ -30,6 +30,8 @@ class MyProducts extends _$MyProducts {
     String? description,
     required int basePrice,
     required bool isActive,
+    bool isPreorder = false,
+    int? preorderDays,
     required List<VariantInput> variants,
     required List<String> imageUrls,
   }) async {
@@ -40,6 +42,8 @@ class MyProducts extends _$MyProducts {
           description: description,
           basePrice: basePrice,
           isActive: isActive,
+          isPreorder: isPreorder,
+          preorderDays: preorderDays,
         );
     if (id != null) {
       await repo.updateFields(
@@ -48,6 +52,8 @@ class MyProducts extends _$MyProducts {
         description: description,
         basePrice: basePrice,
         isActive: isActive,
+        isPreorder: isPreorder,
+        preorderDays: preorderDays,
       );
     }
     await repo.syncVariants(productId, variants);

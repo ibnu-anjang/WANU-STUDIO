@@ -26,6 +26,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     text: widget.existing?.basePrice.toString(),
   );
   late bool _isActive = widget.existing?.isActive ?? true;
+  late bool _isPreorder = widget.existing?.isPreorder ?? false;
+  late final _preorderDays = TextEditingController(
+    text: widget.existing?.preorderDays?.toString(),
+  );
   late final List<VariantInput> _variants = widget.existing == null
       ? [VariantInput(name: 'Default')]
       : widget.existing!.variants
@@ -46,6 +50,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     _title.dispose();
     _description.dispose();
     _basePrice.dispose();
+    _preorderDays.dispose();
     super.dispose();
   }
 
@@ -81,6 +86,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       );
       return;
     }
+    final preorderDays = int.tryParse(_preorderDays.text.trim());
+    if (_isPreorder && (preorderDays == null || preorderDays <= 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Isi estimasi hari preorder')),
+      );
+      return;
+    }
     setState(() => _saving = true);
     try {
       await ref.read(myProductsProvider.notifier).save(
@@ -91,6 +103,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 : _description.text.trim(),
             basePrice: int.parse(_basePrice.text.trim()),
             isActive: _isActive,
+            isPreorder: _isPreorder,
+            preorderDays: _isPreorder ? preorderDays : null,
             variants: _variants,
             imageUrls: _imageUrls,
           );
@@ -169,6 +183,26 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               value: _isActive,
               onChanged: (v) => setState(() => _isActive = v),
             ),
+            const SizedBox(height: AppSpace.md),
+            SwitchRow(
+              title: 'Preorder (PO)',
+              value: _isPreorder,
+              onChanged: (v) => setState(() => _isPreorder = v),
+            ),
+            if (_isPreorder) ...[
+              const SizedBox(height: AppSpace.md),
+              LabeledField(
+                label: 'Estimasi hari preorder',
+                child: TextFormField(
+                  controller: _preorderDays,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'mis. 7',
+                    suffixText: 'hari',
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpace.xl),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

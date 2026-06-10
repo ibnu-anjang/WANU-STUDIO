@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/glass.dart';
+import '../../../shared/widgets/preorder_badge.dart';
 import '../../cart/application/cart_controller.dart';
 import '../../profile/application/profile_controller.dart';
 import '../application/product_controller.dart';
@@ -242,6 +243,22 @@ class _DetailState extends State<_Detail> {
                       ),
                 ),
               ),
+              if (product.preorderLabel != null) ...[
+                const SizedBox(height: AppSpace.md),
+                Row(
+                  children: [
+                    PreorderBadge(label: product.preorderLabel!),
+                    const SizedBox(width: AppSpace.sm),
+                    Text(
+                      'Dikirim ±${product.preorderDays} hari setelah bayar',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               if (product.description != null) ...[
                 const SizedBox(height: AppSpace.xl),
                 Text(

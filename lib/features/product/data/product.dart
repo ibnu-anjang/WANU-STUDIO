@@ -48,6 +48,8 @@ class Product {
     required this.basePrice,
     required this.isActive,
     this.description,
+    this.isPreorder = false,
+    this.preorderDays,
     this.variants = const [],
     this.images = const [],
   });
@@ -58,10 +60,15 @@ class Product {
   final int basePrice;
   final bool isActive;
   final String? description;
+  final bool isPreorder;
+  final int? preorderDays;
   final List<ProductVariant> variants;
   final List<ProductImage> images;
 
   String? get coverUrl => images.isEmpty ? null : images.first.url;
+
+  String? get preorderLabel =>
+      isPreorder ? 'PO ${preorderDays ?? '?'} hari' : null;
 
   factory Product.fromMap(Map<String, dynamic> map) {
     final variants = (map['product_variants'] as List? ?? [])
@@ -78,6 +85,8 @@ class Product {
       basePrice: (map['base_price'] as num).toInt(),
       isActive: map['is_active'] as bool,
       description: map['description'] as String?,
+      isPreorder: map['is_preorder'] as bool? ?? false,
+      preorderDays: (map['preorder_days'] as num?)?.toInt(),
       variants: variants,
       images: images,
     );

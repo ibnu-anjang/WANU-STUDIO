@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/format.dart';
 import '../../../shared/widgets/glass.dart';
+import '../../../shared/widgets/preorder_badge.dart';
 import '../../cart/application/cart_controller.dart';
 import '../application/product_controller.dart';
 import '../data/product.dart';
@@ -265,6 +266,12 @@ class _ProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (product.preorderLabel != null)
+                    Positioned(
+                      left: AppSpace.sm,
+                      top: AppSpace.sm,
+                      child: PreorderBadge(label: product.preorderLabel!),
+                    ),
                 ],
               ),
             ),

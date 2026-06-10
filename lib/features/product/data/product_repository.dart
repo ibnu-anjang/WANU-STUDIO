@@ -72,6 +72,8 @@ class ProductRepository {
     String? description,
     required int basePrice,
     required bool isActive,
+    bool isPreorder = false,
+    int? preorderDays,
   }) async {
     final data = await _client
         .from('products')
@@ -80,6 +82,8 @@ class ProductRepository {
           'description': description,
           'base_price': basePrice,
           'is_active': isActive,
+          'is_preorder': isPreorder,
+          'preorder_days': isPreorder ? preorderDays : null,
         })
         .select('id')
         .single();
@@ -92,12 +96,16 @@ class ProductRepository {
     String? description,
     required int basePrice,
     required bool isActive,
+    bool isPreorder = false,
+    int? preorderDays,
   }) =>
       _client.from('products').update({
         'title': title,
         'description': description,
         'base_price': basePrice,
         'is_active': isActive,
+        'is_preorder': isPreorder,
+        'preorder_days': isPreorder ? preorderDays : null,
       }).eq('id', id);
 
   Future<void> syncVariants(
