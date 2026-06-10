@@ -98,7 +98,21 @@ Mulai dari sini. Aman, cepat, tidak ada migration.
 - **#11 Menu "Kelola Feed"** di admin — CRUD feed (list video/post, hapus, edit
   caption/tag produk). Reuse `video_repository`.
 
-## Batch C — Butuh perubahan skema (migration + codegen)
+## Batch C — status (2026-06-11)
+
+- **#3 preorder — ✅ SELESAI**. Migration `20260611000002` (kolom `is_preorder`,
+  `preorder_days` + check > 0). Form toggle + input hari, badge "PO X hari"
+  (widget `PreorderBadge`) di katalog & detail.
+- **#10 post gambar feed — ✅ SELESAI** (aditif, BUKAN rename tabel). Migration
+  `20260611000003` (`videos.type` + `image_urls`, bucket `videos` izinkan mime
+  gambar). Feed render carousel gambar / video, overlay dipakai bersama
+  (`_OverlayLayer`). Upload screen mode Video/Gambar (multi-pick, upload per
+  gambar lalu `createImagePost`). Manage feed thumbnail dari gambar pertama.
+- **#7 hapus akun — BELUM**. Ditunda atas permintaan user. Saat dikerjakan,
+  putuskan soft-delete (anonymize + flag, tanpa Edge Function) vs hard-delete
+  (Edge Function `auth.admin`). Tombol di Profil + konfirmasi.
+
+### (rencana awal) Batch C
 
 - **#3 Produk preorder/PO**: tambah kolom `is_preorder bool` + `preorder_days int`
   di `products`. Form kelola produk dapat toggle + input hari. Tampilkan badge
