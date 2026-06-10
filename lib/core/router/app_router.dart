@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
+import '../../features/feed/data/feed_video.dart';
+import '../../features/feed/presentation/edit_feed_screen.dart';
 import '../../features/feed/presentation/feed_screen.dart';
 import '../../features/feed/presentation/manage_feed_screen.dart';
 import '../../features/feed/presentation/upload_video_screen.dart';
@@ -93,6 +95,10 @@ GoRouter goRouter(Ref ref) {
       GoRoute(
         path: '/admin/feed',
         builder: (_, _) => const ManageFeedScreen(),
+      ),
+      GoRoute(
+        path: '/admin/feed/edit',
+        builder: (_, state) => EditFeedScreen(post: state.extra as FeedVideo),
       ),
       GoRoute(
         path: '/admin/promote',

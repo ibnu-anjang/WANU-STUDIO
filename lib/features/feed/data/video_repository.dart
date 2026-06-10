@@ -114,6 +114,22 @@ class VideoRepository {
   Future<void> deleteVideo(String id) =>
       _client.from('videos').delete().eq('id', id);
 
+  // Edit caption + tag produk (single tag). Tag lama diganti.
+  Future<void> updatePost({
+    required String id,
+    String? caption,
+    String? productId,
+  }) async {
+    await _client.from('videos').update({'caption': caption}).eq('id', id);
+    await _client.from('video_product_tags').delete().eq('video_id', id);
+    if (productId != null) {
+      await _client.from('video_product_tags').insert({
+        'video_id': id,
+        'product_id': productId,
+      });
+    }
+  }
+
   String _mimeFor(String ext) => switch (ext.toLowerCase()) {
         'mov' => 'video/quicktime',
         'webm' => 'video/webm',

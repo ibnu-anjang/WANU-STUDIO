@@ -48,6 +48,20 @@ class FeedVideos extends _$FeedVideos {
   Future<String> uploadImageBytes(Uint8List bytes, String extension) =>
       ref.read(videoRepositoryProvider).uploadImage(bytes, extension);
 
+  Future<void> editPost({
+    required String id,
+    String? caption,
+    String? productId,
+  }) async {
+    await ref.read(videoRepositoryProvider).updatePost(
+          id: id,
+          caption: caption,
+          productId: productId,
+        );
+    ref.invalidateSelf();
+    await future;
+  }
+
   Future<void> delete(String id) async {
     await ref.read(videoRepositoryProvider).deleteVideo(id);
     ref.invalidateSelf();

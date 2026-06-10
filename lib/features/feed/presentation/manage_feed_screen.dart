@@ -141,6 +141,10 @@ class _FeedRow extends ConsumerWidget {
             ),
           ),
           IconButton(
+            icon: const Icon(Icons.edit_outlined, color: AppColors.textSecondary),
+            onPressed: () => context.push('/admin/feed/edit', extra: video),
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_outline, color: AppColors.danger),
             onPressed: () => _confirmDelete(context, ref),
           ),
