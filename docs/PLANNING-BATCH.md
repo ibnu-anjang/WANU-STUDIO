@@ -108,9 +108,15 @@ Mulai dari sini. Aman, cepat, tidak ada migration.
   gambar). Feed render carousel gambar / video, overlay dipakai bersama
   (`_OverlayLayer`). Upload screen mode Video/Gambar (multi-pick, upload per
   gambar lalu `createImagePost`). Manage feed thumbnail dari gambar pertama.
-- **#7 hapus akun — BELUM**. Ditunda atas permintaan user. Saat dikerjakan,
-  putuskan soft-delete (anonymize + flag, tanpa Edge Function) vs hard-delete
-  (Edge Function `auth.admin`). Tombol di Profil + konfirmasi.
+- **#7 hapus akun — ✅ SELESAI (hard delete)**. Edge Function `delete-account`
+  (service role): hapus order user dulu (FK `orders.buyer_id` ON DELETE RESTRICT)
+  lalu `auth.admin.deleteUser` → cascade profil + semua data. Tile danger
+  "Hapus akun" di Profil (buyer & admin) + konfirmasi, lalu signOut.
+
+### Tambahan
+- **Edit Kelola Feed — ✅ SELESAI**. Row dapat tombol edit → `EditFeedScreen`
+  (caption + dropdown tag produk, prefilled). `videoRepository.updatePost`
+  ganti tag tunggal + update caption.
 
 ### (rencana awal) Batch C
 
