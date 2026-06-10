@@ -15,11 +15,16 @@ class UploadVideoScreen extends ConsumerStatefulWidget {
   ConsumerState<UploadVideoScreen> createState() => _UploadVideoScreenState();
 }
 
+enum _Mode { video, image }
+
 class _UploadVideoScreenState extends ConsumerState<UploadVideoScreen> {
   final _caption = TextEditingController();
-  XFile? _picked;
+  _Mode _mode = _Mode.video;
+  XFile? _video;
+  final List<String> _imageUrls = [];
   String? _productId;
   var _uploading = false;
+  var _pickingImages = false;
 
   @override
   void dispose() {
@@ -27,36 +32,74 @@ class _UploadVideoScreenState extends ConsumerState<UploadVideoScreen> {
     super.dispose();
   }
 
-  Future<void> _pick() async {
+  bool get _hasMedia =>
+      _mode == _Mode.video ? _video != null : _imageUrls.isNotEmpty;
+
+  Future<void> _pickVideo() async {
     final file = await ImagePicker().pickVideo(source: ImageSource.gallery);
-    if (file != null) setState(() => _picked = file);
+    if (file != null) setState(() => _video = file);
   }
 
-  Future<void> _upload() async {
-    final file = _picked;
-    if (file == null) return;
-    setState(() => _uploading = true);
+  // Upload tiap gambar segera (seperti form produk) → preview pakai URL,
+  // konsisten lintas web/mobile tanpa pusing path lokal.
+  Future<void> _pickImages() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final files = await ImagePicker().pickMultiImage(limit: 10);
+    if (files.isEmpty) return;
+    setState(() => _pickingImages = true);
     try {
-      final bytes = await file.readAsBytes();
-      final ext = file.name.contains('.')
-          ? file.name.split('.').last.toLowerCase()
-          : 'mp4';
-      await ref.read(feedVideosProvider.notifier).upload(
-            bytes: bytes,
-            extension: ext,
-            caption: _caption.text.trim().isEmpty ? null : _caption.text.trim(),
-            productId: _productId,
-          );
+      final notifier = ref.read(feedVideosProvider.notifier);
+      for (final img in files) {
+        final bytes = await img.readAsBytes();
+        final url =
+            await notifier.uploadImageBytes(bytes, _extOf(img.name, 'jpg'));
+        if (!mounted) return;
+        setState(() => _imageUrls.add(url));
+      }
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text('Gagal upload: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _pickingImages = false);
+    }
+  }
+
+  String _extOf(String name, String fallback) =>
+      name.contains('.') ? name.split('.').last.toLowerCase() : fallback;
+
+  Future<void> _upload() async {
+    if (!_hasMedia) return;
+    setState(() => _uploading = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final caption =
+        _caption.text.trim().isEmpty ? null : _caption.text.trim();
+    try {
+      final notifier = ref.read(feedVideosProvider.notifier);
+      if (_mode == _Mode.video) {
+        final bytes = await _video!.readAsBytes();
+        await notifier.upload(
+          bytes: bytes,
+          extension: _extOf(_video!.name, 'mp4'),
+          caption: caption,
+          productId: _productId,
+        );
+      } else {
+        await notifier.uploadImagePost(
+          imageUrls: _imageUrls,
+          caption: caption,
+          productId: _productId,
+        );
+      }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Video diupload')),
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Konten diupload')),
       );
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       setState(() => _uploading = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Gagal upload: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Gagal upload: $e')));
     }
   }
 
@@ -65,49 +108,41 @@ class _UploadVideoScreenState extends ConsumerState<UploadVideoScreen> {
     final catalog = ref.watch(catalogProductsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Upload video')),
+      appBar: AppBar(title: const Text('Upload konten')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpace.lg),
         children: [
-          GestureDetector(
-            onTap: _uploading ? null : _pick,
-            child: Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: _picked != null
-                      ? AppColors.accent
-                      : AppColors.borderStrong,
-                  width: _picked != null ? 1.5 : 1,
-                ),
+          SegmentedButton<_Mode>(
+            segments: const [
+              ButtonSegment(
+                value: _Mode.video,
+                label: Text('Video'),
+                icon: Icon(Icons.videocam_outlined),
               ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _picked != null
-                          ? Icons.check_circle_outline
-                          : Icons.video_call_outlined,
-                      size: 40,
-                      color: _picked != null
-                          ? AppColors.accent
-                          : AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: AppSpace.sm),
-                    Text(
-                      _picked?.name ?? 'Pilih video dari galeri',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
+              ButtonSegment(
+                value: _Mode.image,
+                label: Text('Gambar'),
+                icon: Icon(Icons.image_outlined),
               ),
-            ),
+            ],
+            selected: {_mode},
+            onSelectionChanged: _uploading
+                ? null
+                : (s) => setState(() => _mode = s.first),
           ),
+          const SizedBox(height: AppSpace.lg),
+          if (_mode == _Mode.video)
+            _VideoDropZone(
+              picked: _video,
+              onTap: _uploading ? null : _pickVideo,
+            )
+          else
+            _ImageDropZone(
+              urls: _imageUrls,
+              busy: _uploading || _pickingImages,
+              onAdd: _pickImages,
+              onRemove: (i) => setState(() => _imageUrls.removeAt(i)),
+            ),
           const SizedBox(height: AppSpace.lg),
           LabeledField(
             label: 'Caption',
@@ -137,7 +172,134 @@ class _UploadVideoScreenState extends ConsumerState<UploadVideoScreen> {
       bottomNavigationBar: SaveBar(
         label: 'Upload',
         saving: _uploading,
-        onSave: _picked == null ? null : _upload,
+        onSave: _hasMedia ? _upload : null,
+      ),
+    );
+  }
+}
+
+class _VideoDropZone extends StatelessWidget {
+  const _VideoDropZone({required this.picked, required this.onTap});
+
+  final XFile? picked;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 200,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(
+            color: picked != null ? AppColors.accent : AppColors.borderStrong,
+            width: picked != null ? 1.5 : 1,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                picked != null
+                    ? Icons.check_circle_outline
+                    : Icons.video_call_outlined,
+                size: 40,
+                color:
+                    picked != null ? AppColors.accent : AppColors.textSecondary,
+              ),
+              const SizedBox(height: AppSpace.sm),
+              Text(
+                picked?.name ?? 'Pilih video dari galeri',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageDropZone extends StatelessWidget {
+  const _ImageDropZone({
+    required this.urls,
+    required this.busy,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final List<String> urls;
+  final bool busy;
+  final VoidCallback onAdd;
+  final void Function(int) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 120,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (var i = 0; i < urls.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpace.sm),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    child: Image.network(
+                      urls[i],
+                      width: 100,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: AppSpace.xs,
+                    right: AppSpace.xs,
+                    child: GestureDetector(
+                      onTap: () => onRemove(i),
+                      child: const CircleAvatar(
+                        radius: 12,
+                        backgroundColor: Colors.black87,
+                        child: Icon(Icons.close, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          GestureDetector(
+            onTap: busy ? null : onAdd,
+            child: Container(
+              width: 100,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                border: Border.all(color: AppColors.borderStrong),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: busy
+                  ? const Center(child: CircularProgressIndicator())
+                  : const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_photo_alternate_outlined,
+                            color: AppColors.textSecondary),
+                        SizedBox(height: AppSpace.xs),
+                        Text('Tambah',
+                            style: TextStyle(
+                                color: AppColors.textMuted, fontSize: 12)),
+                      ],
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

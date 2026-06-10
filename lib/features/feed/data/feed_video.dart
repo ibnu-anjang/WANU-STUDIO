@@ -30,21 +30,27 @@ class FeedProduct {
 class FeedVideo {
   const FeedVideo({
     required this.id,
-    required this.videoUrl,
+    required this.type,
     required this.caption,
     required this.creatorName,
+    this.videoUrl,
+    this.imageUrls = const [],
     this.thumbnailUrl,
     this.creatorAvatarUrl,
     this.product,
   });
 
   final String id;
-  final String videoUrl;
+  final String type; // 'video' | 'image'
+  final String? videoUrl;
+  final List<String> imageUrls;
   final String? caption;
   final String creatorName;
   final String? thumbnailUrl;
   final String? creatorAvatarUrl;
   final FeedProduct? product;
+
+  bool get isImage => type == 'image';
 
   factory FeedVideo.fromMap(Map<String, dynamic> map) {
     final profile = map['profiles'] as Map<String, dynamic>?;
@@ -56,7 +62,10 @@ class FeedVideo {
         .firstOrNull;
     return FeedVideo(
       id: map['id'] as String,
-      videoUrl: map['video_url'] as String,
+      type: map['type'] as String? ?? 'video',
+      videoUrl: map['video_url'] as String?,
+      imageUrls:
+          (map['image_urls'] as List?)?.cast<String>() ?? const [],
       caption: map['caption'] as String?,
       creatorName: profile?['display_name'] as String? ??
           profile?['username'] as String? ??

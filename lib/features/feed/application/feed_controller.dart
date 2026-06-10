@@ -30,6 +30,24 @@ class FeedVideos extends _$FeedVideos {
     await future;
   }
 
+  // Post gambar: bytes sudah di-upload satu per satu jadi URL di layar upload.
+  Future<void> uploadImagePost({
+    required List<String> imageUrls,
+    String? caption,
+    String? productId,
+  }) async {
+    await ref.read(videoRepositoryProvider).createImagePost(
+          imageUrls: imageUrls,
+          caption: caption,
+          productId: productId,
+        );
+    ref.invalidateSelf();
+    await future;
+  }
+
+  Future<String> uploadImageBytes(Uint8List bytes, String extension) =>
+      ref.read(videoRepositoryProvider).uploadImage(bytes, extension);
+
   Future<void> delete(String id) async {
     await ref.read(videoRepositoryProvider).deleteVideo(id);
     ref.invalidateSelf();

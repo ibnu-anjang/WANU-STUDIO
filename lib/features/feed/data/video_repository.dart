@@ -8,7 +8,8 @@ import 'feed_video.dart';
 
 part 'video_repository.g.dart';
 
-const _select = 'id, caption, video_url, cf_thumbnail_url, created_at, '
+const _select =
+    'id, type, caption, video_url, image_urls, cf_thumbnail_url, created_at, '
     'profiles!videos_creator_id_fkey(username, display_name, avatar_url), '
     'video_product_tags(products(id, title, base_price, '
     'product_images(url, sort_order)))';
@@ -45,8 +46,46 @@ class VideoRepository {
     return _client.storage.from(_bucket).getPublicUrl(path);
   }
 
+  Future<String> uploadImage(Uint8List bytes, String extension) async {
+    final uid = _client.auth.currentUser!.id;
+    final path =
+        '$uid/${DateTime.now().millisecondsSinceEpoch}_${bytes.length}.$extension';
+    await _client.storage.from(_bucket).uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(contentType: _imageMimeFor(extension)),
+        );
+    return _client.storage.from(_bucket).getPublicUrl(path);
+  }
+
   Future<void> createVideo({
     required String videoUrl,
+    String? caption,
+    String? productId,
+  }) =>
+      _insertPost(
+        type: 'video',
+        videoUrl: videoUrl,
+        caption: caption,
+        productId: productId,
+      );
+
+  Future<void> createImagePost({
+    required List<String> imageUrls,
+    String? caption,
+    String? productId,
+  }) =>
+      _insertPost(
+        type: 'image',
+        imageUrls: imageUrls,
+        caption: caption,
+        productId: productId,
+      );
+
+  Future<void> _insertPost({
+    required String type,
+    String? videoUrl,
+    List<String>? imageUrls,
     String? caption,
     String? productId,
   }) async {
@@ -55,8 +94,10 @@ class VideoRepository {
         .from('videos')
         .insert({
           'creator_id': uid,
+          'type': type,
           'caption': caption,
           'video_url': videoUrl,
+          'image_urls': imageUrls,
           'status': 'ready',
         })
         .select('id')
@@ -77,5 +118,11 @@ class VideoRepository {
         'mov' => 'video/quicktime',
         'webm' => 'video/webm',
         _ => 'video/mp4',
+      };
+
+  String _imageMimeFor(String ext) => switch (ext.toLowerCase()) {
+        'png' => 'image/png',
+        'webp' => 'image/webp',
+        _ => 'image/jpeg',
       };
 }

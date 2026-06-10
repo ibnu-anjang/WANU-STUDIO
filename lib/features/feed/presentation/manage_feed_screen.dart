@@ -70,6 +70,11 @@ class _FeedRow extends ConsumerWidget {
 
   final FeedVideo video;
 
+  String? get _thumbUrl =>
+      video.isImage && video.imageUrls.isNotEmpty
+          ? video.imageUrls.first
+          : video.thumbnailUrl;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
@@ -86,12 +91,16 @@ class _FeedRow extends ConsumerWidget {
             child: SizedBox(
               width: 48,
               height: 64,
-              child: video.thumbnailUrl != null
-                  ? Image.network(video.thumbnailUrl!, fit: BoxFit.cover)
-                  : const ColoredBox(
+              child: _thumbUrl != null
+                  ? Image.network(_thumbUrl!, fit: BoxFit.cover)
+                  : ColoredBox(
                       color: AppColors.surfaceHigh,
-                      child: Icon(Icons.play_arrow_rounded,
-                          color: Colors.white38),
+                      child: Icon(
+                        video.isImage
+                            ? Icons.image_outlined
+                            : Icons.play_arrow_rounded,
+                        color: Colors.white38,
+                      ),
                     ),
             ),
           ),

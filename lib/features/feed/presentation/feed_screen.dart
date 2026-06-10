@@ -47,10 +47,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 scrollDirection: Axis.vertical,
                 itemCount: videos.length,
                 onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (_, i) => _VideoPage(
-                  video: videos[i],
-                  active: i == _page,
-                ),
+                itemBuilder: (_, i) => videos[i].isImage
+                    ? _ImagePage(post: videos[i])
+                    : _VideoPage(
+                        video: videos[i],
+                        active: i == _page,
+                      ),
               );
             },
           ),
@@ -141,7 +143,9 @@ class _VideoPageState extends ConsumerState<_VideoPage> {
   }
 
   Future<void> _init() async {
-    final c = VideoPlayerController.networkUrl(Uri.parse(widget.video.videoUrl));
+    final url = widget.video.videoUrl;
+    if (url == null) return;
+    final c = VideoPlayerController.networkUrl(Uri.parse(url));
     _controller = c;
     try {
       await c.initialize();
@@ -207,30 +211,7 @@ class _VideoPageState extends ConsumerState<_VideoPage> {
               child: Icon(Icons.play_arrow_rounded,
                   size: 72, color: Colors.white70),
             ),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.center,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Color(0xE6000000)],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpace.lg,
-                0,
-                AppSpace.lg,
-                100,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [_Overlay(video: v)],
-              ),
-            ),
-          ),
+          _OverlayLayer(video: v),
           if (_ready && c != null)
             Positioned(
               left: 0,
@@ -255,6 +236,104 @@ class _VideoPageState extends ConsumerState<_VideoPage> {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _OverlayLayer extends StatelessWidget {
+  const _OverlayLayer({required this.video});
+
+  final FeedVideo video;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.center,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Color(0xE6000000)],
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.lg,
+              0,
+              AppSpace.lg,
+              100,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [_Overlay(video: video)],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ImagePage extends StatefulWidget {
+  const _ImagePage({required this.post});
+
+  final FeedVideo post;
+
+  @override
+  State<_ImagePage> createState() => _ImagePageState();
+}
+
+class _ImagePageState extends State<_ImagePage> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final urls = widget.post.imageUrls;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (urls.isEmpty)
+          const _Placeholder()
+        else
+          PageView.builder(
+            itemCount: urls.length,
+            onPageChanged: (i) => setState(() => _index = i),
+            itemBuilder: (_, i) => Image.network(urls[i], fit: BoxFit.cover),
+          ),
+        if (urls.length > 1)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 56),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < urls.length; i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: i == _index ? 18 : 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: i == _index ? Colors.white : Colors.white38,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        _OverlayLayer(video: widget.post),
+      ],
     );
   }
 }
