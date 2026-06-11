@@ -1,6 +1,12 @@
 # WANU — Video Commerce App
 
-Aplikasi mobile yang menggabungkan **feed video short-form (ala TikTok/Reels)** dengan **marketplace lengkap**. User scroll video vertikal, tiap video bisa di-tag produk, dan bisa langsung checkout. Konsep mirip TikTok Shop / Shopee Video.
+Aplikasi mobile yang menggabungkan **feed video short-form (ala TikTok/Reels)** dengan **toko online**. User scroll feed vertikal (video & gambar), tiap post bisa di-tag produk, dan bisa langsung checkout. Konsep mirip TikTok Shop / Shopee Video.
+
+> **Status implementasi (2026-06-12)** — beberapa keputusan PIVOT dari rencana awal di bawah:
+> - **Single-store**: WANU Studio adalah satu-satunya toko (bukan marketplace multi-seller). Akses kelola lewat `profiles.role = 'admin'`, store singleton id `11111111-1111-4111-8111-111111111111`.
+> - **Video masih via Supabase Storage** (bucket `videos`, MP4 langsung, tanpa transcoding) — Cloudflare Stream belum diintegrasikan; `cf_playback_id` disiapkan untuk migrasi nanti.
+> - **Pembayaran masih MOCK**: `mark_order_paid` dipanggil client. Midtrans + webhook BELUM ada — wajib sebelum menerima uang nyata (lihat `docs/PLANNING-BATCH.md` §Checklist Deploy).
+> - FCM belum diintegrasikan.
 
 Dokumen perencanaan ada di `docs/`: [PRD](./docs/PRD.md) · [TRD](./docs/TRD.md) · [ERD](./docs/ERD.md).
 
