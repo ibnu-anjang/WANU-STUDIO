@@ -10,7 +10,7 @@ void main() {
       const ProviderScope(child: MaterialApp(home: LoginScreen())),
     );
 
-    expect(find.text('WANU'), findsOneWidget);
+    expect(find.text('WANU STUDIO'), findsOneWidget);
     expect(find.byType(TextField), findsNWidgets(2));
   });
 }

@@ -143,12 +143,45 @@ Mulai dari sini. Aman, cepat, tidak ada migration.
 - **Single-store + admin role**: store id `11111111-1111-4111-8111-111111111111`
   (`wanuStoreId` di `lib/core/config/constants.dart`). `is_admin()` di Postgres,
   `profiles.role`. Cek admin di Flutter: `currentProfileProvider.value?.isAdmin`.
-- **Akun dev**: admin `admin@wanu.studio` / `admin123` (username `adminiben`),
-  buyer `buyer@wanu.studio` / `buyer123`. Login bisa pakai email atau username.
+- **Akun dev**: admin `admin@wanu.studio` (username `adminiben`), buyer
+  `buyer@wanu.studio`. Password JANGAN ditulis di repo — simpan di password
+  manager. ⚠️ Rotasi password kedua akun ini SEBELUM deploy publik (password
+  lama lemah dan sempat ter-commit di dokumen ini). Login bisa email/username.
 - **RPC order**: `create_orders_from_cart(p_address_id)`, `mark_order_paid(p_order_id)`
   (mock), `set_order_status(p_order_id, p_to)`, `submit_review(...)`.
 - `flutter analyze` harus 0 issue sebelum commit. Code English, docs Indonesia,
   Conventional Commits, trailer `Co-Authored-By: Claude Opus 4.8`.
+
+## Checklist Deploy (audit 2026-06-12)
+
+Sudah dibereskan (migration `20260612000001_perf_rls_policy_cleanup`):
+
+- ✅ **Privilege escalation `profiles.role`** — user bisa set `role='admin'` sendiri
+  via PATCH REST. Fix: column-level grant (UPDATE hanya username/display_name/
+  avatar_url/bio); role hanya via `promote_to_admin`.
+- ✅ Policy `orders admin update status` di-drop (redundan; transisi via RPC saja).
+- ✅ Advisor performance: `auth.uid()`/`is_admin()` di-wrap `(select ...)`,
+  policy FOR ALL dipecah insert/update/delete, 14 FK index ditambahkan.
+- ✅ `widget_test.dart` disesuaikan ("WANU" → "WANU STUDIO").
+
+Masih HARUS sebelum terima uang nyata:
+
+- ⬜ **Midtrans**: Edge Function `create-order` (Snap token) + `midtrans-webhook`
+  (verifikasi signature → panggil logic `mark_order_paid` pakai service_role),
+  lalu `REVOKE EXECUTE` `mark_order_paid` dari `authenticated`. Selama belum,
+  semua order bisa "paid" gratis dari client (fase mock, by design).
+- ⬜ **Rotasi password** akun dev `admin@wanu.studio` & `buyer@wanu.studio`
+  (password lama lemah + sempat ter-commit di repo).
+- ⬜ **Aktifkan leaked password protection** (Dashboard → Auth → Passwords).
+
+Disarankan / keputusan bisnis:
+
+- ⬜ `email_for_username` callable oleh `anon` → siapa pun bisa memetakan
+  username → email. Opsi: pindahkan resolusi + sign-in ke Edge Function.
+- ⬜ `delete-account` menghapus order user (termasuk paid) → catatan penjualan
+  hilang. Pertimbangkan anonimisasi alih-alih hard delete order.
+- ⬜ Egress video: MP4 hingga 100 MB diserve dari Supabase Storage — pantau
+  kuota bandwidth setelah launch.
 
 ## Urutan eksekusi yang disarankan
 
